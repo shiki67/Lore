@@ -1,6 +1,6 @@
 import datetime
 from typing import Annotated
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, Depends, Form, Request, Response
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError
 import jwt
@@ -33,6 +33,7 @@ async def add_user(
 
 @router.post('/auth', response_model=Token)
 async def auth_user(
+    response: Response,
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db: Session = Depends(get_db)
 ):
@@ -46,27 +47,49 @@ async def auth_user(
         user_id=str(user_data.id),
         nickname=user_data.nickname
     )
-    
+    response.set_cookie(
+        key="refresh_token",
+        value=tokens["refresh_token"],
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        max_age=7*24*60*60
+    )
     return Token(
         access_token=tokens["access_token"],
-        refresh_token=tokens["refresh_token"],
+        refresh_token="",
         token_type='bearer'
     )
 
 @router.post('/refresh', response_model=Token)
 async def refresh_tokens(
-    refresh_token: str = Form(...),
+    request: Request,
     db: Session = Depends(get_db)
 ):
+    refresh_token = request.cookies.get("refresh_token")
+    if not refresh_token:
+        raise UnauthorizedException("Refresh token not found 401")
     user_data = await verify_refresh_token(refresh_token)
     tokens = create_tokens_pair(
         user_id=user_data["user_id"],
         nickname=user_data["nickname"]
     )
+    response = Response()
+    response.set_cookie(
+        key="refresh_token",
+        value=tokens["refresh_token"],
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        max_age=7*24*60*60
+    )
     
     return Token(
         access_token=tokens["access_token"],
-        refresh_token=tokens["refresh_token"],
+        refresh_token="",
         token_type='bearer'
     )
 
+@router.post('/logout')
+async def logout(response: Response):
+    response.delete_cookie(key="refresh_token")

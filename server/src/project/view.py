@@ -4,8 +4,7 @@ from sqlalchemy.orm import Session
 from src.project.model import Project, CreateProject, UpdateProject
 from src.project.service import ProjectService
 from src.token.service import get_current_user_id
-from src.users.model import User
-from src.exceptions import NotFoundException
+from src.exception import NotFoundException
 
 router = APIRouter()
 
