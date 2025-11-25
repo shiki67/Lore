@@ -14,5 +14,5 @@ class ProjectService:
         return ProjectRepository(self.db).get_projects_by_user_id(user_id)
     def update_project(self, project_data: UpdateProject):
         return ProjectRepository(self.db).update_project(project_data)
-    def delete_project(self, project_id: int):
+    def delete(self, project_id: int):
         return ProjectRepository(self.db).delete_project(project_id)

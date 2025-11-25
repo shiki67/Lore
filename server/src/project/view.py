@@ -9,50 +9,51 @@ from src.exception import NotFoundException
 router = APIRouter()
 
 @router.post("/project")
-async def add_project(
+async def add(
     project_data: CreateProject,
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id)
     ):
-    project_id = ProjectService(db).create_project(project_data, user_id)
+    project_data.user_id = user_id
+    project_id = ProjectService(db).create_project(project_data)
     return {"project_id": project_id}
 
 @router.get("/project")
-async def get_my_films(
+async def get(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id)
 ):
     return ProjectService(db).get_project_by_user_id(user_id)
 
 @router.get("/project/{project_id}")
-async def get_film_by_id(
+async def get_by_id(
     project_id: int, 
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id)
     ):
-    project = ProjectService(db).get_project_by_id(project_id, user_id)
+    project = ProjectService(db).get_project_by_id(project_id)
     if not project:
         raise NotFoundException()
     return project
 
 @router.put("/project/{project_id}")
-async def update_film(
+async def update(
     project_data: UpdateProject,
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id)
 ):
-    updated_data = ProjectService(db).update_project(project_data, user_id)
+    updated_data = ProjectService(db).update_project(project_data)
     if not updated_data:
         raise NotFoundException()
     return {"project": updated_data}
 
 @router.delete("/projects/{project_id}")
-async def delete_film(
+async def delete(
     project_id: int,
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id)
 ):
-    success = ProjectService(db).delete_film(project_id, user_id)
+    success = ProjectService(db).delete(project_id)
     if not success:
         raise NotFoundException()
     return {"message": "Проект удален"}
