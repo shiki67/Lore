@@ -36,7 +36,7 @@ const LoginPage = () => {
         
         <form onSubmit={handleSubmit} className="form">
           <div className="input-group">
-            <label className="input-label">Логин(почта/телефон)*</label>
+            <label className="input-label">Логин (почта/телефон)*</label>
             <input
               type="text"
               className="input"

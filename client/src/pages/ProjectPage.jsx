@@ -6,6 +6,7 @@ const ProjectPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+  const [showUserModal, setShowUserModal] = useState(false);
   const [showAddResourceModal, setShowAddResourceModal] = useState(false);
   const [selectedResources, setSelectedResources] = useState([]);
   
@@ -16,13 +17,34 @@ const ProjectPage = () => {
     description: 'Описание проекта'
   };
 
-  // Заглушка для ресурсов (в реальном приложении это будет приходить с бекенда)
+  // Заглушка для ресурсов (убраны карты связи)
   const availableResources = [
     { id: 1, name: 'Анкета клиента', type: 'form', icon: '/personalcard.svg', selected: false },
-    { id: 2, name: 'Анкета сотрудника', type: 'form', icon: '/personalcard.svg', selected: false },
-    { id: 3, name: 'Карта связей отдела', type: 'contact', icon: '/connection.svg', selected: false },
-    { id: 4, name: 'Внешние контакты', type: 'contact', icon: '/connection.svg', selected: false }
+    { id: 2, name: 'Анкета сотрудника', type: 'form', icon: '/personalcard.svg', selected: false }
+    // Убраны: Карта связей отдела и Внешние контакты
   ];
+
+  // Состояния для формы пользователя
+  const [userData, setUserData] = useState({
+    nickname: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: ''
+  });
+
+  // Заполняем данные пользователя при открытии модалки
+  useState(() => {
+    if (showUserModal && user) {
+      setUserData({
+        nickname: user.username || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        password: '',
+        confirmPassword: ''
+      });
+    }
+  }, [showUserModal, user]);
 
   const handleBackClick = () => {
     navigate('/dashboard');
@@ -58,6 +80,29 @@ const ProjectPage = () => {
     setSelectedResources(prev => prev.filter(id => id !== resourceId));
   };
 
+  // Обработчики для формы пользователя
+  const handleUserDataChange = (field, value) => {
+    setUserData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSaveUserData = () => {
+    // Логика сохранения данных пользователя
+    console.log('Сохранение данных:', userData);
+    setShowUserModal(false);
+  };
+
+  const handleDeleteAccount = () => {
+    if (window.confirm('Вы уверены, что хотите удалить аккаунт? Это действие нельзя отменить.')) {
+      logout();
+    }
+  };
+
+  // Получаем первую букву ника для аватарки
+  const userInitial = user?.username?.charAt(0)?.toUpperCase() || 'U';
+
   // Получаем выбранные ресурсы для отображения
   const selectedResourcesData = availableResources.filter(resource => 
     selectedResources.includes(resource.id)
@@ -77,10 +122,10 @@ const ProjectPage = () => {
         <div className="nav-logo">
           <img src="/Logo.svg" alt="Логотип" className="logo" />
         </div>
-        
+
         <button 
           className="nav-btn-circle"
-          onClick={() => {/* можно открыть модалку пользователя */}}
+          onClick={() => setShowUserModal(true)}
         >
           <img src="/cabinet.svg" alt="Личный кабинет" className="nav-icon" />
         </button>
@@ -98,7 +143,7 @@ const ProjectPage = () => {
           </button>
           
           <button
-            className="add-resource-btn"
+            className="btn btn-primary add-resource-centered"
             onClick={handleAddResourceClick}
           >
             добавить ресурс
@@ -123,11 +168,6 @@ const ProjectPage = () => {
                 >
                   <img src="/delete.svg" alt="Удалить" className="delete-icon" />
                 </button>
-                
-                {/* Можно добавить описание если нужно */}
-                {/* <div className="item-description">
-                  {resource.description}
-                </div> */}
               </div>
               <div className="item-name">
                 {resource.name}
@@ -186,6 +226,100 @@ const ProjectPage = () => {
                 onClick={handleSaveResources}
               >
                 СОХРАНИТЬ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно пользователя */}
+      {showUserModal && (
+        <div className="modal-overlay" onClick={() => setShowUserModal(false)}>
+          <div className="user-modal-wide" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <button 
+                className="modal-close"
+                onClick={() => setShowUserModal(false)}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="user-profile">
+              <div className="user-avatar-large">
+                {userInitial}
+              </div>
+              
+              <div className="user-form">
+                <div className="form-row">
+                  <label className="form-label">Никнейм</label>
+                  <input
+                    type="text"
+                    className="form-input-wide"
+                    value={userData.nickname}
+                    onChange={(e) => handleUserDataChange('nickname', e.target.value)}
+                    placeholder="Введите никнейм"
+                  />
+                </div>
+                
+                <div className="form-row">
+                  <label className="form-label">Почта</label>
+                  <input
+                    type="email"
+                    className="form-input-wide"
+                    value={userData.email}
+                    onChange={(e) => handleUserDataChange('email', e.target.value)}
+                    placeholder="Введите email"
+                  />
+                </div>
+                
+                <div className="form-row">
+                  <label className="form-label">Телефон</label>
+                  <input
+                    type="tel"
+                    className="form-input-wide"
+                    value={userData.phone}
+                    onChange={(e) => handleUserDataChange('phone', e.target.value)}
+                    placeholder="Введите телефон"
+                  />
+                </div>
+                
+                <div className="form-row">
+                  <label className="form-label">Пароль</label>
+                  <input
+                    type="password"
+                    className="form-input-wide"
+                    value={userData.password}
+                    onChange={(e) => handleUserDataChange('password', e.target.value)}
+                    placeholder="Введите новый пароль"
+                  />
+                </div>
+                
+                <div className="form-row">
+                  <label className="form-label">Повторите пароль</label>
+                  <input
+                    type="password"
+                    className="form-input-wide"
+                    value={userData.confirmPassword}
+                    onChange={(e) => handleUserDataChange('confirmPassword', e.target.value)}
+                    placeholder="Повторите пароль"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="modal-actions-double-wide">
+              <button 
+                className="btn btn-primary"
+                onClick={handleDeleteAccount}
+              >
+                УДАЛИТЬ АККАУНТ
+              </button>
+              <button 
+                className="btn btn-primary"
+                onClick={handleSaveUserData}
+              >
+                СОХРАНИТЬ ИЗМЕНЕНИЯ
               </button>
             </div>
           </div>

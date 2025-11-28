@@ -7,11 +7,23 @@ const DashboardPage = () => {
   const navigate = useNavigate();
   const [showUserModal, setShowUserModal] = useState(false);
   const [showProjectModal, setShowProjectModal] = useState(false);
+  const [showFormModal, setShowFormModal] = useState(false);
   const [activeItems, setActiveItems] = useState([]);
   
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
   const [projectError, setProjectError] = useState('');
+
+  // Состояния для формы анкеты
+  const [formData, setFormData] = useState({
+    fullName: '',
+    shortName: '',
+    birthDate: '',
+    age: '',
+    race: '',
+    description: '',
+    history: ''
+  });
 
   // Состояния для формы пользователя
   const [userData, setUserData] = useState({
@@ -37,8 +49,7 @@ const DashboardPage = () => {
 
   const itemTypes = [
     { id: 'project', name: 'Проект', icon: '/project.svg', color: '#29ABE2' },
-    { id: 'form', name: 'Анкета', icon: '/personalcard.svg', color: '#4CAF50' },
-    { id: 'contact', name: 'Связь', icon: '/connection.svg', color: '#FF9800' }
+    { id: 'form', name: 'Анкета', icon: '/personalcard.svg', color: '#4CAF50' }
   ];
 
   const handleAddProject = () => {
@@ -46,6 +57,44 @@ const DashboardPage = () => {
     setProjectDescription('');
     setProjectError('');
     setShowProjectModal(true);
+  };
+
+  const handleAddForm = () => {
+    setFormData({
+      fullName: '',
+      shortName: '',
+      birthDate: '',
+      age: '',
+      race: '',
+      description: '',
+      history: ''
+    });
+    setShowFormModal(true);
+  };
+
+  const handleSaveForm = () => {
+    if (!formData.fullName.trim()) {
+      alert('Поле "Полное имя" обязательно для заполнения');
+      return;
+    }
+
+    const newItem = {
+      id: Date.now(),
+      type: 'form',
+      name: formData.shortName || formData.fullName,
+      description: formData.description,
+      icon: '/personalcard.svg',
+      color: '#4CAF50',
+      createdAt: new Date().toISOString(),
+      formData: { ...formData }
+    };
+
+    setActiveItems([...activeItems, newItem]);
+    setShowFormModal(false);
+  };
+
+  const handleCancelForm = () => {
+    setShowFormModal(false);
   };
 
   const handleSaveProject = () => {
@@ -79,6 +128,11 @@ const DashboardPage = () => {
   };
 
   const handleAddItem = (type) => {
+    if (type.id === 'form') {
+      handleAddForm();
+      return;
+    }
+
     const newItem = {
       id: Date.now(),
       type: type.id,
@@ -106,6 +160,13 @@ const DashboardPage = () => {
     }));
   };
 
+  const handleFormDataChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   const handleSaveUserData = () => {
     // Логика сохранения данных пользователя
     console.log('Сохранение данных:', userData);
@@ -118,8 +179,16 @@ const DashboardPage = () => {
     }
   };
 
+  // Нефункциональная кнопка создания шаблона
+  const handleCreateTemplate = () => {
+    console.log('Создание шаблона - функция в разработке');
+  };
+
   // Получаем первую букву ника для аватарки
   const userInitial = user?.username?.charAt(0)?.toUpperCase() || 'U';
+
+  // Получаем первую букву полного имени для иконки анкеты
+  const formInitial = formData.fullName.charAt(0)?.toUpperCase() || 'A';
 
   return (
     <div className="dashboard-page">
@@ -165,11 +234,13 @@ const DashboardPage = () => {
             создать анкету
           </button>
           
+          {/* Нефункциональная кнопка создания шаблона */}
           <button
             className="creation-btn black-outline-btn"
-            onClick={() => handleAddItem(itemTypes[2])}
+            onClick={handleCreateTemplate}
+            style={{ opacity: 0.6, cursor: 'not-allowed' }}
           >
-            создать карту связи
+            создать новый шаблон
           </button>
         </div>
 
@@ -216,6 +287,156 @@ const DashboardPage = () => {
           )}
         </div>
       </div>
+
+      {/* Модальное окно создания анкеты */}
+      {showFormModal && (
+        <div className="modal-overlay" onClick={handleCancelForm} style={{ overflowY: 'auto', padding: '2rem 0' }}>
+          <div className="user-modal-wide" onClick={(e) => e.stopPropagation()} style={{ 
+            maxWidth: '900px', 
+            width: '90vw', 
+            margin: 'auto',
+            position: 'relative'
+          }}>
+            <div className="modal-header">
+              <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '400' }}>Создание анкеты</h3>
+              <button 
+                className="modal-close"
+                onClick={handleCancelForm}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="user-profile" style={{ padding: '1.5rem' }}>
+              {/* 1 сектор - составной */}
+              <div style={{ display: 'flex', gap: '2rem', marginBottom: '2rem', alignItems: 'flex-start' }}>
+                {/* Иконка слева */}
+                <div className="user-avatar-outline" style={{ width: '80px', height: '80px', flexShrink: 0, marginTop: '0.5rem' }}>
+                  {formInitial}
+                </div>
+                
+                {/* Правая часть - три поля ввода */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem', minWidth: 0 }}>
+                  {/* Полное имя */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <label style={{ width: '140px', textAlign: 'right', fontFamily: 'Poppins, sans-serif', fontSize: '1rem', flexShrink: 0 }}>
+                      Полное имя
+                    </label>
+                    <input
+                      type="text"
+                      className="input"
+                      value={formData.fullName}
+                      onChange={(e) => handleFormDataChange('fullName', e.target.value)}
+                      placeholder="Введите полное имя"
+                      style={{ flex: 1 }}
+                    />
+                  </div>
+                  
+                  {/* Сокращенное имя */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <label style={{ width: '140px', textAlign: 'right', fontFamily: 'Poppins, sans-serif', fontSize: '1rem', flexShrink: 0 }}>
+                      Сокращенное имя
+                    </label>
+                    <input
+                      type="text"
+                      className="input"
+                      value={formData.shortName}
+                      onChange={(e) => handleFormDataChange('shortName', e.target.value)}
+                      placeholder="Введите сокращенное имя"
+                      style={{ flex: 1 }}
+                    />
+                  </div>
+                  
+                  {/* Три поля ввода - выровнены с полями имен */}
+                  <div style={{ display: 'flex', gap: '1rem', marginLeft: '56px' }}>
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <label style={{ width: '90px', textAlign: 'right', fontFamily: 'Poppins, sans-serif', fontSize: '0.9rem', flexShrink: 0 }}>
+                        Дата рождения
+                      </label>
+                      <input
+                        type="text"
+                        className="input"
+                        value={formData.birthDate}
+                        onChange={(e) => handleFormDataChange('birthDate', e.target.value)}
+                        placeholder="дд.мм.гггг"
+                        style={{ flex: 1 }}
+                      />
+                    </div>
+                    
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <label style={{ width: '60px', textAlign: 'right', fontFamily: 'Poppins, sans-serif', fontSize: '0.9rem', flexShrink: 0 }}>
+                        Возраст
+                      </label>
+                      <input
+                        type="text"
+                        className="input"
+                        value={formData.age}
+                        onChange={(e) => handleFormDataChange('age', e.target.value)}
+                        placeholder="Возраст"
+                        style={{ flex: 1 }}
+                      />
+                    </div>
+                    
+                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <label style={{ width: '40px', textAlign: 'right', fontFamily: 'Poppins, sans-serif', fontSize: '0.9rem', flexShrink: 0 }}>
+                        Раса
+                      </label>
+                      <input
+                        type="text"
+                        className="input"
+                        value={formData.race}
+                        onChange={(e) => handleFormDataChange('race', e.target.value)}
+                        placeholder="Раса"
+                        style={{ flex: 1 }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* 2 сектор - описание */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', fontFamily: 'Poppins, sans-serif', fontSize: '1rem', marginBottom: '0.5rem' }}>
+                  Описание
+                </label>
+                <textarea
+                  className="input textarea"
+                  value={formData.description}
+                  onChange={(e) => handleFormDataChange('description', e.target.value)}
+                  placeholder="Введите описание"
+                  rows="3"
+                  style={{ width: '100%' }}
+                />
+              </div>
+              
+              {/* 3 сектор - история */}
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontFamily: 'Poppins, sans-serif', fontSize: '1rem', marginBottom: '0.5rem' }}>
+                  История
+                </label>
+                <textarea
+                  className="input textarea"
+                  value={formData.history}
+                  onChange={(e) => handleFormDataChange('history', e.target.value)}
+                  placeholder="Введите историю"
+                  rows="3"
+                  style={{ width: '100%' }}
+                />
+              </div>
+            </div>
+            
+            <div className="modal-actions-single" style={{ justifyContent: 'flex-end', padding: '1.5rem' }}>
+              <button 
+                className="btn btn-primary"
+                onClick={handleSaveForm}
+                style={{ minWidth: '140px' }}
+              >
+                СОХРАНИТЬ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Модальное окно создания проекта */}
       {showProjectModal && (
@@ -285,7 +506,7 @@ const DashboardPage = () => {
             </div>
             
             <div className="user-profile">
-              <div className="user-avatar-outline">
+              <div className="user-avatar-large">
                 {userInitial}
               </div>
               
