@@ -3,14 +3,19 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import DashboardPage from './pages/DashBoardPage';
+import DashboardPage from './pages/DashboardPage';
+import ProjectPage from './pages/ProjectPage';
 import './App.css';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
-    return <div className="loading">Загрузка...</div>;
+    return (
+      <div className="auth-page">
+        <div className="loading">Загрузка...</div>
+      </div>
+    );
   }
 
   return isAuthenticated ? children : <Navigate to="/login" />;
@@ -20,69 +25,64 @@ const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
-    return <div className="loading">Загрузка...</div>;
-  }
-
-  return !isAuthenticated ? children : <Navigate to="/dashboard" />;
-};
-
-const AppContent = () => {
-  const { isAuthenticated, logout, user } = useAuth();
-
-  if (isAuthenticated) {
     return (
-      <div className="dashboard-page">
-        <nav className="navbar">
-          <h1>🎯 Мое приложение</h1>
-          <div className="nav-user">
-            <span>Привет, {user?.name || user?.username}!</span>
-            <button onClick={logout} className="logout-btn">
-              Выйти
-            </button>
-          </div>
-        </nav>
-        <div className="dashboard-container">
-          <Routes>
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/" element={<Navigate to="/dashboard" />} />
-          </Routes>
-        </div>
+      <div className="auth-page">
+        <div className="loading">Загрузка...</div>
       </div>
     );
   }
 
-  return (
-    <div className="auth-page">
-      <div className="auth-container">
-        <Routes>
-          <Route 
-            path="/login" 
-            element={
-              <PublicRoute>
-                <LoginPage />
-              </PublicRoute>
-            } 
-          />
-          <Route 
-            path="/register" 
-            element={
-              <PublicRoute>
-                <RegisterPage />
-              </PublicRoute>
-            } 
-          />
-          <Route path="*" element={<Navigate to="/login" />} />
-        </Routes>
-      </div>
-    </div>
-  );
+  return !isAuthenticated ? children : <Navigate to="/dashboard" />;
 };
 
 function App() {
   return (
     <AuthProvider>
       <Router>
-        <AppContent />
+        <div className="app-container">
+          <Routes>
+            <Route 
+              path="/login" 
+              element={
+                <PublicRoute>
+                  <div className="auth-page">
+                    <LoginPage />
+                  </div>
+                </PublicRoute>
+              } 
+            />
+            <Route 
+              path="/register" 
+              element={
+                <PublicRoute>
+                  <div className="auth-page">
+                    <RegisterPage />
+                  </div>
+                </PublicRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <DashboardPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/" 
+              element={<Navigate to="/dashboard" />} 
+            />
+            <Route 
+              path="/project" 
+              element={
+                <ProtectedRoute>
+                  <ProjectPage />
+                </ProtectedRoute>
+              } 
+            />
+          </Routes>
+        </div>
       </Router>
     </AuthProvider>
   );

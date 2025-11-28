@@ -39,8 +39,12 @@ export const AuthProvider = ({ children }) => {
 
     existingUsers.push(newUser);
     localStorage.setItem('users', JSON.stringify(existingUsers));
-    localStorage.setItem('currentUser', JSON.stringify({ name, username }));
-    setUser({ name, username });
+    localStorage.setItem('currentUser', JSON.stringify({ 
+      id: newUser.id,
+      name, 
+      username 
+    }));
+    setUser({ id: newUser.id, name, username });
 
     return { success: true };
   };
@@ -53,8 +57,12 @@ export const AuthProvider = ({ children }) => {
       return { success: false, error: 'Неверный логин или пароль' };
     }
 
-    localStorage.setItem('currentUser', JSON.stringify({ name: user.name, username }));
-    setUser({ name: user.name, username });
+    localStorage.setItem('currentUser', JSON.stringify({ 
+      id: user.id,
+      name: user.name, 
+      username 
+    }));
+    setUser({ id: user.id, name: user.name, username });
 
     return { success: true };
   };
