@@ -10,9 +10,6 @@ const RegisterPage = () => {
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
-  // const { register } = useAuth();
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -35,12 +32,7 @@ const RegisterPage = () => {
       setLoading(false);
       return;
     }
-
     const result = await apiService.registration(nickname, email, password);
-    
-    // if (!result.success) {
-    //   setError(result.error);
-    // }
     setLoading(false);
   };
 

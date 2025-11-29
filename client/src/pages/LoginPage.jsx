@@ -8,16 +8,11 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  // const { login } = useAuth();
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-
-    // const result = await login(username, password);
     const result = await apiService.auth(username, password);
-    // localStorage.setItem('auth_token', result.access_token);
     if (!result.success) {
       setError(result.error);
     }

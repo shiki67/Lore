@@ -21,7 +21,6 @@ const DashboardPage = () => {
   const [projectDescription, setProjectDescription] = useState('');
   const [projectError, setProjectError] = useState('');
 
-  // Состояния для формы анкеты
   const [formData, setFormData] = useState({
     fullName: '',
     shortName: '',
@@ -32,7 +31,6 @@ const DashboardPage = () => {
     history: ''
   });
 
-  // Состояния для формы пользователя
   const [userData, setUserData] = useState({
     nickname: '',
     email: '',
@@ -40,19 +38,6 @@ const DashboardPage = () => {
     password: '',
     confirmPassword: ''
   });
-
-  // Заполняем данные пользователя при открытии модалки
-  // useEffect(() => {
-  //   if (showUserModal && user) {
-  //     setUserData({
-  //       nickname: user.username || '',
-  //       email: user.email || '',
-  //       phone: user.phone || '',
-  //       password: '',
-  //       confirmPassword: ''
-  //     });
-  //   }
-  // }, [showUserModal, user]);
  useEffect(() => {
     loadProjects();
   }, []);
@@ -196,6 +181,7 @@ const DashboardPage = () => {
   };
 
   const handleRemoveItem = (id) => {
+    apiService.deleteProject(id);
     setActiveItems(activeItems.filter(item => item.id !== id));
   };
 
@@ -203,7 +189,6 @@ const DashboardPage = () => {
     navigate('/project', { state: { project } });
   };
 
-  // Обработчики для формы пользователя
   const handleUserDataChange = (field, value) => {
     setUserData(prev => ({
       ...prev,
@@ -218,31 +203,18 @@ const DashboardPage = () => {
     }));
   };
 
-  const handleSaveUserData = () => {
-    // Логика сохранения данных пользователя
-    console.log('Сохранение данных:', userData);
-    setShowUserModal(false);
-  };
-
   const handleLogout = () => {
     apiService.logout();
     navigate('/login');
   };
-
-  // Нефункциональная кнопка создания шаблона
   const handleCreateTemplate = () => {
     console.log('Создание шаблона - функция в разработке');
   };
-
-  // Получаем первую букву ника для аватарки
-  const userInitial = user?.username?.charAt(0)?.toUpperCase() || 'U';
-
-  // Получаем первую букву полного имени для иконки анкеты
+  const userInitial = userData?.nickname?.charAt(0)?.toUpperCase() || 'U';
   const formInitial = formData.fullName.charAt(0)?.toUpperCase() || 'A';
 
   return (
     <div className="dashboard-page">
-      {/* Верхняя плашка с лого */}
       <nav className="dashboard-nav">
         <button 
           className="nav-btn-circle"
@@ -284,7 +256,6 @@ const DashboardPage = () => {
             создать анкету
           </button>
           
-          {/* Нефункциональная кнопка создания шаблона */}
           <button
             className="creation-btn black-outline-btn"
             onClick={handleCreateTemplate}
@@ -294,7 +265,6 @@ const DashboardPage = () => {
           </button>
         </div>
 
-        {/* Общая сетка для карточек и подписей */}
         <div className="items-container">
           {activeItems.map(item => (
             <div 
@@ -338,7 +308,6 @@ const DashboardPage = () => {
         </div>
       </div>
 
-      {/* Модальное окно создания анкеты */}
       {showFormModal && (
         <div className="modal-overlay" onClick={handleCancelForm} style={{ overflowY: 'auto', padding: '2rem 0' }}>
           <div className="user-modal-wide" onClick={(e) => e.stopPropagation()} style={{ 
@@ -358,16 +327,11 @@ const DashboardPage = () => {
             </div>
             
             <div className="user-profile" style={{ padding: '1.5rem' }}>
-              {/* 1 сектор - составной */}
               <div style={{ display: 'flex', gap: '2rem', marginBottom: '2rem', alignItems: 'flex-start' }}>
-                {/* Иконка слева */}
                 <div className="user-avatar-outline" style={{ width: '80px', height: '80px', flexShrink: 0, marginTop: '0.5rem' }}>
                   {formInitial}
                 </div>
-                
-                {/* Правая часть - три поля ввода */}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem', minWidth: 0 }}>
-                  {/* Полное имя */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <label style={{ width: '140px', textAlign: 'right', fontFamily: 'Poppins, sans-serif', fontSize: '1rem', flexShrink: 0 }}>
                       Полное имя
@@ -381,8 +345,6 @@ const DashboardPage = () => {
                       style={{ flex: 1 }}
                     />
                   </div>
-                  
-                  {/* Сокращенное имя */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <label style={{ width: '140px', textAlign: 'right', fontFamily: 'Poppins, sans-serif', fontSize: '1rem', flexShrink: 0 }}>
                       Сокращенное имя
@@ -396,8 +358,6 @@ const DashboardPage = () => {
                       style={{ flex: 1 }}
                     />
                   </div>
-                  
-                  {/* Три поля ввода - выровнены с полями имен */}
                   <div style={{ display: 'flex', gap: '1rem', marginLeft: '56px' }}>
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <label style={{ width: '90px', textAlign: 'right', fontFamily: 'Poppins, sans-serif', fontSize: '0.9rem', flexShrink: 0 }}>
@@ -443,8 +403,6 @@ const DashboardPage = () => {
                   </div>
                 </div>
               </div>
-              
-              {/* 2 сектор - описание */}
               <div style={{ marginBottom: '1.5rem' }}>
                 <label style={{ display: 'block', fontFamily: 'Poppins, sans-serif', fontSize: '1rem', marginBottom: '0.5rem' }}>
                   Описание
@@ -458,8 +416,6 @@ const DashboardPage = () => {
                   style={{ width: '100%' }}
                 />
               </div>
-              
-              {/* 3 сектор - история */}
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ display: 'block', fontFamily: 'Poppins, sans-serif', fontSize: '1rem', marginBottom: '0.5rem' }}>
                   История
@@ -487,8 +443,6 @@ const DashboardPage = () => {
           </div>
         </div>
       )}
-
-      {/* Модальное окно создания проекта */}
       {showProjectModal && (
         <div className="modal-overlay" onClick={handleCancelProject}>
           <div className="project-modal" onClick={(e) => e.stopPropagation()}>
@@ -541,8 +495,6 @@ const DashboardPage = () => {
           </div>
         </div>
       )}
-
-      {/* Модальное окно пользователя */}
       {showUserModal && (
         <div className="modal-overlay" onClick={() => setShowUserModal(false)}>
           <div className="user-modal-wide" onClick={(e) => e.stopPropagation()}>
@@ -614,12 +566,6 @@ const DashboardPage = () => {
               >
                 ВЫЙТИ ИЗ АККАУНТА
               </button>
-              {/* <button 
-                className="btn btn-primary"
-                onClick={handleSaveUserData}
-              >
-                СОХРАНИТЬ ИЗМЕНЕНИЯ
-              </button> */}
             </div>
           </div>
         </div>

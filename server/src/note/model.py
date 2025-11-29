@@ -20,4 +20,5 @@ class UpdateNote(BaseModel):
     id: int
     data: Optional[dict[str]] = None
     pattern_id: Optional[int] = None
+    project_id: Optional[int] = None
     
