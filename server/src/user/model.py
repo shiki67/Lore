@@ -14,6 +14,9 @@ class UserData(BaseModel):
     nickname: str
     email: str
 
+class UserInfo(BaseModel):
+    nickname: str
+    email: str
 class CreateUser(BaseModel):
     nickname: str
     email: str

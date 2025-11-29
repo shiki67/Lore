@@ -5,8 +5,8 @@ from src.project.repository import ProjectRepository
 class ProjectService:
     def __init__(self, db: Session):
         self.db = db
-    def create_project(self, project_data: CreateProject) -> int:
-        project_id = ProjectRepository(self.db).create_project(project_data) 
+    def create_project(self, project_data: CreateProject, user_id) -> int:
+        project_id = ProjectRepository(self.db).create_project(project_data, user_id) 
         return project_id
     def get_project_by_id(self, project_id: int):
         return ProjectRepository(self.db).get_project_by_id(project_id)

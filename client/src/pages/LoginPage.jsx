@@ -1,25 +1,29 @@
 import { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { Link } from 'react-router-dom';
-
+// import { useAuth } from '../contexts/AuthContext';
+import {useNavigate, Link } from 'react-router-dom';
+import { apiService } from '../api';
 const LoginPage = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
-  const { login } = useAuth();
+  const navigate = useNavigate();
+  // const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    const result = await login(username, password);
-    
+    // const result = await login(username, password);
+    const result = await apiService.auth(username, password);
+    // localStorage.setItem('auth_token', result.access_token);
     if (!result.success) {
       setError(result.error);
     }
+    if (result.access_token) {
+        navigate('/dashboard');
+      } 
     setLoading(false);
   };
 

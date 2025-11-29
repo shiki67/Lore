@@ -14,8 +14,9 @@ async def add(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id)
     ):
-    project_data.user_id = user_id
-    project_id = ProjectService(db).create_project(project_data)
+    print("Received project_data:", project_data)  # Добавь эту строку
+    print("User ID from token:", user_id)          # И эту
+    project_id = ProjectService(db).create_project(project_data, user_id)
     return {"project_id": project_id}
 
 @router.get("/project")
@@ -47,7 +48,7 @@ async def update(
         raise NotFoundException()
     return {"project": updated_data}
 
-@router.delete("/projects/{project_id}")
+@router.delete("/project/{project_id}")
 async def delete(
     project_id: int,
     db: Session = Depends(get_db),

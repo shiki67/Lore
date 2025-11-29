@@ -1,17 +1,17 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
-
+import { apiService } from '../api';
 const RegisterPage = () => {
-  const [name, setName] = useState('');
-  const [username, setUsername] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
-  const { register } = useAuth();
+  // const { register } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,11 +36,11 @@ const RegisterPage = () => {
       return;
     }
 
-    const result = await register(name, username, password);
+    const result = await apiService.registration(nickname, email, password);
     
-    if (!result.success) {
-      setError(result.error);
-    }
+    // if (!result.success) {
+    //   setError(result.error);
+    // }
     setLoading(false);
   };
 
@@ -61,8 +61,8 @@ const RegisterPage = () => {
             <input
               type="text"
               className="input"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
               required
             />
           </div>
@@ -72,8 +72,8 @@ const RegisterPage = () => {
             <input
               type="text"
               className="input"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>

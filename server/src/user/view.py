@@ -9,11 +9,18 @@ from src.user.model import CreateUser, LoginUser
 from src.token.model import Token
 from sqlalchemy.orm import Session
 from src.database import get_db
-from src.token.service import create_tokens_pair, verify_refresh_token
+from src.token.service import create_tokens_pair, verify_refresh_token, get_current_user_id
 from  src.exception import UnauthorizedException
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth")
+
+@router.get("/user")
+async def get_user(
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id)
+):
+    return UsersService(db).get_user(user_id)
 
 @router.post("/registration")
 async def add_user(
@@ -44,7 +51,7 @@ async def auth_user(
         )
     )
     tokens = create_tokens_pair(
-        user_id=str(user_data.id),
+        user_id=user_data.id,
         nickname=user_data.nickname
     )
     response.set_cookie(

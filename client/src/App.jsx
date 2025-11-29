@@ -6,33 +6,26 @@ import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import ProjectPage from './pages/ProjectPage';
 import './App.css';
+import { apiService } from './api';
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const isAuthenticated = apiService.isAuthenticated();
 
-  if (loading) {
-    return (
-      <div className="auth-page">
-        <div className="loading">Загрузка...</div>
-      </div>
-    );
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
   }
 
-  return isAuthenticated ? children : <Navigate to="/login" />;
+  return children;
 };
 
 const PublicRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const isAuthenticated = apiService.isAuthenticated();
 
-  if (loading) {
-    return (
-      <div className="auth-page">
-        <div className="loading">Загрузка...</div>
-      </div>
-    );
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" />;
   }
 
-  return !isAuthenticated ? children : <Navigate to="/dashboard" />;
+  return children;
 };
 
 function App() {

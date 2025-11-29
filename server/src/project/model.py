@@ -13,7 +13,6 @@ class Project(Base):
 class CreateProject(BaseModel):
     name: str
     description: str
-    user_id: int
 
 class UpdateProject(BaseModel):
     id: int

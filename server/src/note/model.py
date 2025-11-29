@@ -9,6 +9,7 @@ class Note(Base):
     data = Column(JSON)
     pattern_id = Column(Integer, ForeignKey('pattern.id'))
     user_id = Column(Integer, ForeignKey('user.id'))
+    project_id = Column(Integer)
     
 class CreateNote(BaseModel):
     data: dict[str]

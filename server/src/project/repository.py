@@ -7,11 +7,11 @@ from src.exception import UnauthorizedException, NotFoundException
 class ProjectRepository:
     def __init__(self, db: Session):
         self.db = db
-    def create_project(self, project_data: CreateProject) -> int:
+    def create_project(self, project_data: CreateProject, user_id) -> int:
         project = Project(
             name = project_data.name,
             description = project_data.description,
-            user_id = project_data.user_id
+            user_id = user_id
         )
         self.db.add(project)
         self.db.commit()

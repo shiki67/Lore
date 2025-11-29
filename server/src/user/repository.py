@@ -1,6 +1,6 @@
 from typing import List
 from sqlalchemy.orm import Session
-from src.user.model import User, CreateUser, UserData, LoginUser
+from src.user.model import User, CreateUser, UserData, LoginUser, UserInfo
 from passlib.context import CryptContext
 from src.exception import UnauthorizedException, NotFoundException
 
@@ -14,6 +14,9 @@ class UserRepository:
         if user is None:
             raise NotFoundException("User not found 404")
         return user
+    def get_user(self, id: int):
+        user = self.db.query(User).filter(User.id == id).first()
+        return UserInfo(nickname=user.nickname, email= user.email)
     def is_user_exist(self, nickname: str) -> bool:
         user = self.db.query(User).filter(User.nickname == nickname).first()
         if user is None:

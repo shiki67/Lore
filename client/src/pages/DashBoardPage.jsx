@@ -1,10 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { apiService } from '../api';
 
 const DashboardPage = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  useEffect(() => {
+    if (!apiService.isAuthenticated()) {
+      navigate('/login');
+      return;
+    }
+  }, [navigate]);
   const [showUserModal, setShowUserModal] = useState(false);
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showFormModal, setShowFormModal] = useState(false);
@@ -35,8 +42,40 @@ const DashboardPage = () => {
   });
 
   // Заполняем данные пользователя при открытии модалки
+  // useEffect(() => {
+  //   if (showUserModal && user) {
+  //     setUserData({
+  //       nickname: user.username || '',
+  //       email: user.email || '',
+  //       phone: user.phone || '',
+  //       password: '',
+  //       confirmPassword: ''
+  //     });
+  //   }
+  // }, [showUserModal, user]);
+ useEffect(() => {
+    loadProjects();
+  }, []);
+
+  const loadProjects = async () => {
+    try {
+      const projects = await apiService.getAllProjects();
+      const formattedProjects = projects.map(project => ({
+        id: project.id,
+        type: 'project',
+        name: project.name,
+        description: project.description,
+        icon: '/project.svg',
+        color: '#29ABE2',
+        createdAt: project.created_at || new Date().toISOString(),
+      }));
+      setActiveItems(formattedProjects);
+    } catch (err) {
+    }
+  };
   useEffect(() => {
-    if (showUserModal && user) {
+  if (showUserModal) {
+    if (user) {
       setUserData({
         nickname: user.username || '',
         email: user.email || '',
@@ -44,9 +83,22 @@ const DashboardPage = () => {
         password: '',
         confirmPassword: ''
       });
+    } else {
+      fetchUserData();
     }
-  }, [showUserModal, user]);
-
+  }
+}, [showUserModal, user]);
+  const fetchUserData = async () => {
+  try {
+    const userDataFromApi = await apiService.get_user();
+    setUserData(prev => ({
+      ...prev,
+      nickname: userDataFromApi.nickname || userDataFromApi.username || '',
+      email: userDataFromApi.email || '',
+    }));
+  } catch (err) {
+  } 
+};
   const itemTypes = [
     { id: 'project', name: 'Проект', icon: '/project.svg', color: '#29ABE2' },
     { id: 'form', name: 'Анкета', icon: '/personalcard.svg', color: '#4CAF50' }
@@ -88,7 +140,7 @@ const DashboardPage = () => {
       createdAt: new Date().toISOString(),
       formData: { ...formData }
     };
-
+  
     setActiveItems([...activeItems, newItem]);
     setShowFormModal(false);
   };
@@ -112,11 +164,10 @@ const DashboardPage = () => {
       color: '#29ABE2',
       createdAt: new Date().toISOString()
     };
-
+    apiService.addProject(projectName, projectDescription)
     setActiveItems([...activeItems, newItem]);
     setShowProjectModal(false);
-    
-    // Навигация на страницу проекта
+    loadProjects();
     navigate('/project', { state: { project: newItem } });
   };
 
@@ -173,10 +224,9 @@ const DashboardPage = () => {
     setShowUserModal(false);
   };
 
-  const handleDeleteAccount = () => {
-    if (window.confirm('Вы уверены, что хотите удалить аккаунт? Это действие нельзя отменить.')) {
-      logout();
-    }
+  const handleLogout = () => {
+    apiService.logout();
+    navigate('/login');
   };
 
   // Нефункциональная кнопка создания шаблона
@@ -534,17 +584,6 @@ const DashboardPage = () => {
                 </div>
                 
                 <div className="form-row">
-                  <label className="form-label">Телефон</label>
-                  <input
-                    type="tel"
-                    className="form-input-wide"
-                    value={userData.phone}
-                    onChange={(e) => handleUserDataChange('phone', e.target.value)}
-                    placeholder="Введите телефон"
-                  />
-                </div>
-                
-                <div className="form-row">
                   <label className="form-label">Пароль</label>
                   <input
                     type="password"
@@ -571,16 +610,16 @@ const DashboardPage = () => {
             <div className="modal-actions-double-wide">
               <button 
                 className="btn btn-primary"
-                onClick={handleDeleteAccount}
+                onClick={handleLogout}
               >
-                УДАЛИТЬ АККАУНТ
+                ВЫЙТИ ИЗ АККАУНТА
               </button>
-              <button 
+              {/* <button 
                 className="btn btn-primary"
                 onClick={handleSaveUserData}
               >
                 СОХРАНИТЬ ИЗМЕНЕНИЯ
-              </button>
+              </button> */}
             </div>
           </div>
         </div>
