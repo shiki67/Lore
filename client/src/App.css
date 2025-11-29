@@ -48,13 +48,13 @@ body {
   width: 100%;
 }
 
-/* ОСНОВНЫЕ КОНТЕЙНЕРЫ */
+
 .app-container {
   min-height: 100vh;
   width: 100%;
 }
 
-/* СТРАНИЦЫ АВТОРИЗАЦИИ */
+
 .auth-page {
   min-height: 100vh;
   width: 100%;
@@ -73,7 +73,7 @@ body {
   align-items: center;
 }
 
-/* ЛОГОТИП */
+
 .logo-container {
   text-align: center;
   margin-bottom: 2rem;
@@ -85,7 +85,7 @@ body {
   object-fit: contain;
 }
 
-/* ОКНО ФОРМЫ */
+
 .window {
   background: var(--surface-color);
   padding: clamp(1.5rem, 4vw, 2rem) clamp(1rem, 3vw, 1.5rem);
@@ -94,7 +94,7 @@ body {
   width: 100%;
 }
 
-/* ТИТУЛ */
+
 .page-title {
   font-family: 'Poppins', sans-serif;
   text-align: center;
@@ -105,7 +105,6 @@ body {
   line-height: 1.2;
 }
 
-/* ФОРМЫ */
 .form {
   display: flex;
   flex-direction: column;
@@ -148,7 +147,7 @@ body {
   font-family: inherit;
 }
 
-/* КНОПКИ */
+
 .btn {
   font-family: 'Next Art', sans-serif;
   padding: 0.75rem 2rem;
@@ -200,7 +199,6 @@ body {
   transform: none;
 }
 
-/* ССЫЛКИ */
 .link {
   text-align: center;
   margin-top: 1rem;
@@ -219,7 +217,7 @@ body {
   color: var(--primary-color);
 }
 
-/* ОШИБКИ */
+
 .error-message {
   color: var(--error-color);
   margin-bottom: 1rem;
@@ -230,7 +228,6 @@ body {
   font-size: clamp(0.8rem, 2vw, 1rem);
 }
 
-/* ЧЕКБОКС */
 .checkbox-group {
   margin: 1rem 0;
 }
@@ -257,7 +254,6 @@ body {
   text-decoration: underline;
 }
 
-/* ЗАГРУЗКА */
 .loading {
   display: flex;
   justify-content: center;
@@ -267,14 +263,12 @@ body {
   color: var(--text-secondary);
 }
 
-/* ДАШБОРД */
 .dashboard-page {
   min-height: 100vh;
   width: 100%;
   background: var(--background-color);
 }
 
-/* Верхняя плашка с лого - уменьшенная высота */
 .dashboard-nav {
   display: flex;
   justify-content: space-between;
@@ -300,7 +294,6 @@ body {
   height: 50px;
 }
 
-/* Строго круглые кнопки с черной окружностью */
 .nav-btn-circle {
   width: 40px;
   height: 40px;
@@ -321,7 +314,6 @@ body {
   transform: scale(1.05);
 }
 
-/* Стили для SVG иконок в навигации */
 .nav-icon {
   width: 20px;
   height: 20px;
@@ -333,7 +325,6 @@ body {
   filter: brightness(0) invert(1);
 }
 
-/* Основной контент дашборда */
 .dashboard-content {
   padding: 2rem;
   width: 100%;
@@ -341,7 +332,6 @@ body {
   margin: 0 auto;
 }
 
-/* Заголовок "создай свой мир" */
 .world-title {
   font-family: 'Next Art', sans-serif;
   text-align: center;
@@ -352,7 +342,6 @@ body {
   text-transform: lowercase;
 }
 
-/* Кнопки создания */
 .creation-buttons {
   display: flex;
   gap: 1rem;
@@ -374,7 +363,6 @@ body {
   min-width: 140px;
 }
 
-/* Кнопки с черной обводкой */
 .black-outline-btn {
   background: white !important;
   color: #000000 !important;
@@ -392,7 +380,6 @@ body {
   transform: translateY(-2px) !important;
 }
 
-/* Общий контейнер для карточек с подписями */
 .items-container {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -400,14 +387,12 @@ body {
   margin-top: 1rem;
 }
 
-/* Контейнер для карточки и её названия */
 .item-with-name {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 }
 
-/* Карточки - уменьшенные в 2 раза и с градиентом */
 .square-card {
   background: linear-gradient(90deg, #b4b4b4, #ffffff);
   border-radius: 12px;
@@ -427,7 +412,7 @@ body {
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-/* Название под карточкой */
+
 .item-name {
   text-align: center;
   font-weight: 600;
@@ -439,26 +424,25 @@ body {
   justify-content: center;
 }
 
-/* Стили для иконок типов элементов в карточках */
+
 .item-type-icon {
   width: 24px;
   height: 24px;
 }
 
-/* Иконка в левом верхнем углу - уменьшенная */
 .card-icon {
   position: absolute;
   top: 0.75rem;
   left: 0.75rem;
 }
 
-/* Стили для иконки удаления */
+
 .delete-icon {
   width: 18px;
   height: 18px;
 }
 
-/* Кнопка удаления в правом нижнем углу - уменьшенная */
+
 .delete-btn {
   position: absolute;
   bottom: 0.75rem;
@@ -475,7 +459,7 @@ body {
   background: rgba(0,0,0,0.1);
 }
 
-/* Описание проекта в карточке */
+
 .item-description {
   color: var(--text-secondary);
   font-size: 0.9rem;
@@ -684,13 +668,13 @@ body {
     padding: 0.5rem;
   }
 }
-/* Модальное окно проекта - упрощенное */
+
 .project-modal .modal-header {
   border-bottom: none;
   padding-bottom: 0;
 }
 
-/* Кнопка сохранения в одну линию */
+
 .modal-actions-single {
   padding: 1.5rem;
   border-top: 1px solid #eee;
@@ -698,7 +682,7 @@ body {
   justify-content: center;
 }
 
-/* Стили для профиля пользователя */
+
 .user-profile {
   padding: 1.5rem;
 }
@@ -769,44 +753,6 @@ body {
   min-width: 0;
 }
 
-/* Адаптив для модалки пользователя */
-@media (max-width: 768px) {
-  .form-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.5rem;
-  }
-  
-  .form-input {
-    width: 100%;
-  }
-  
-  .modal-actions-double {
-    flex-direction: column;
-  }
-  
-  .user-avatar {
-    width: 60px;
-    height: 60px;
-    font-size: 1.5rem;
-    margin-bottom: 1.5rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .user-profile {
-    padding: 1rem;
-  }
-  
-  .form-label {
-    font-size: 0.9rem;
-  }
-  
-  .form-input {
-    font-size: 0.9rem;
-    padding: 0.6rem 0.8rem;
-  }
-}
 /* Широкая модалка пользователя */
 .user-modal-wide {
   background: white;
@@ -931,7 +877,7 @@ body {
   margin: 0 auto;
 }
 
-/* Шапка проекта с навигацией */
+
 .project-header {
   display: flex;
   justify-content: space-between;
@@ -972,7 +918,7 @@ body {
   transform: translateY(-2px);
 }
 
-/* Название проекта */
+
 .project-title {
   font-family: 'Next Art', sans-serif;
   font-size: 2.5rem;
@@ -982,7 +928,6 @@ body {
   text-align: left;
 }
 
-/* Сетка ресурсов */
 .resources-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -1203,24 +1148,6 @@ body {
   position: relative;
 }
 
-/* Адаптив для мобильных */
-@media (max-width: 768px) {
-  .project-header {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .add-resource-centered {
-    order: 2;
-    width: 100%;
-    max-width: 250px;
-  }
-  
-  .back-arrow {
-    align-self: flex-start;
-    order: 1;
-  }
-}
 /* Стили для формы анкеты */
 .form-section-grid {
   display: grid;
@@ -1291,30 +1218,3 @@ body {
   resize: vertical;
 }
 
-/* Адаптив для мобильных */
-@media (max-width: 768px) {
-  .form-section-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-  
-  .form-avatar {
-    display: flex;
-    justify-content: center;
-  }
-  
-  .form-triple-row {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-  
-  .form-row-centered {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
-  }
-  
-  .form-row-centered label {
-    text-align: left;
-    padding-right: 0;
-  }
-}

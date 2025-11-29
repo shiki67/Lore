@@ -10,21 +10,17 @@ const ProjectPage = () => {
   const [showAddResourceModal, setShowAddResourceModal] = useState(false);
   const [selectedResources, setSelectedResources] = useState([]);
   
-  // Получаем данные проекта из location state или создаем заглушку
   const project = location.state?.project || { 
     id: 1, 
     name: 'Название проекта',
     description: 'Описание проекта'
   };
 
-  // Заглушка для ресурсов (убраны карты связи)
   const availableResources = [
     { id: 1, name: 'Анкета клиента', type: 'form', icon: '/personalcard.svg', selected: false },
     { id: 2, name: 'Анкета сотрудника', type: 'form', icon: '/personalcard.svg', selected: false }
-    // Убраны: Карта связей отдела и Внешние контакты
   ];
 
-  // Состояния для формы пользователя
   const [userData, setUserData] = useState({
     nickname: '',
     email: '',
@@ -33,7 +29,6 @@ const ProjectPage = () => {
     confirmPassword: ''
   });
 
-  // Заполняем данные пользователя при открытии модалки
   useState(() => {
     if (showUserModal && user) {
       setUserData({
@@ -65,7 +60,6 @@ const ProjectPage = () => {
   };
 
   const handleSaveResources = () => {
-    // Логика сохранения выбранных ресурсов
     console.log('Выбранные ресурсы:', selectedResources);
     setShowAddResourceModal(false);
     setSelectedResources([]);
@@ -80,7 +74,7 @@ const ProjectPage = () => {
     setSelectedResources(prev => prev.filter(id => id !== resourceId));
   };
 
-  // Обработчики для формы пользователя
+
   const handleUserDataChange = (field, value) => {
     setUserData(prev => ({
       ...prev,
@@ -89,7 +83,6 @@ const ProjectPage = () => {
   };
 
   const handleSaveUserData = () => {
-    // Логика сохранения данных пользователя
     console.log('Сохранение данных:', userData);
     setShowUserModal(false);
   };
@@ -100,17 +93,13 @@ const ProjectPage = () => {
     }
   };
 
-  // Получаем первую букву ника для аватарки
   const userInitial = user?.username?.charAt(0)?.toUpperCase() || 'U';
-
-  // Получаем выбранные ресурсы для отображения
   const selectedResourcesData = availableResources.filter(resource => 
     selectedResources.includes(resource.id)
   );
 
   return (
     <div className="project-page">
-      {/* Верхняя плашка с лого */}
       <nav className="dashboard-nav">
         <button 
           className="nav-btn-circle"
@@ -131,9 +120,7 @@ const ProjectPage = () => {
         </button>
       </nav>
 
-      {/* Контент страницы проекта */}
       <div className="project-content">
-        {/* Навигация назад и кнопка добавления */}
         <div className="project-header">
           <button 
             className="back-arrow"
@@ -150,10 +137,8 @@ const ProjectPage = () => {
           </button>
         </div>
 
-        {/* Название проекта */}
         <h1 className="project-title">{project.name}</h1>
 
-        {/* Сетка добавленных ресурсов - такой же стиль как на главной */}
         <div className="items-container">
           {selectedResourcesData.map(resource => (
             <div key={resource.id} className="item-with-name">
