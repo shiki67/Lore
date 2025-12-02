@@ -12,13 +12,12 @@ class Note(Base):
     project_id = Column(Integer)
     
 class CreateNote(BaseModel):
-    data: dict[str]
+    data: dict
     pattern_id: int
-    user_id: int
 
 class UpdateNote(BaseModel):
     id: int
-    data: Optional[dict[str]] = None
+    data: Optional[dict] = None
     pattern_id: Optional[int] = None
     project_id: Optional[int] = None
     

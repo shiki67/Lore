@@ -1,7 +1,6 @@
 import { useState } from 'react';
-// import { useAuth } from '../contexts/AuthContext';
 import {useNavigate, Link } from 'react-router-dom';
-import { apiService } from '../api';
+import { apiService } from '../contexts/api';
 const LoginPage = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { noteApi } from '../contexts/NotesApi';
 
 const ProjectPage = () => {
   const navigate = useNavigate();
@@ -9,22 +10,15 @@ const ProjectPage = () => {
   const [showUserModal, setShowUserModal] = useState(false);
   const [showAddResourceModal, setShowAddResourceModal] = useState(false);
   const [selectedResources, setSelectedResources] = useState([]);
-  
-  // Получаем данные проекта из location state или создаем заглушку
+  const [availableResources, setAvailableResources] = useState([]);
+  const [projectNotes, setProjectNotes] = useState([])
+  const [freeNotes, setFreeNotes] = useState([]);
+  const [loading, setLoading] = useState(false);
   const project = location.state?.project || { 
     id: 1, 
     name: 'Название проекта',
     description: 'Описание проекта'
   };
-
-  // Заглушка для ресурсов (убраны карты связи)
-  const availableResources = [
-    { id: 1, name: 'Анкета клиента', type: 'form', icon: '/personalcard.svg', selected: false },
-    { id: 2, name: 'Анкета сотрудника', type: 'form', icon: '/personalcard.svg', selected: false }
-    // Убраны: Карта связей отдела и Внешние контакты
-  ];
-
-  // Состояния для формы пользователя
   const [userData, setUserData] = useState({
     nickname: '',
     email: '',
@@ -32,9 +26,7 @@ const ProjectPage = () => {
     password: '',
     confirmPassword: ''
   });
-
-  // Заполняем данные пользователя при открытии модалки
-  useState(() => {
+  useEffect(() => {
     if (showUserModal && user) {
       setUserData({
         nickname: user.username || '',
@@ -45,13 +37,101 @@ const ProjectPage = () => {
       });
     }
   }, [showUserModal, user]);
+  useEffect(() => {
+    loadProjectResources();
+  }, [project.id]);
+
+  const loadProjectResources = async () => {
+    try {
+      setLoading(true);
+      const notesInProject = await noteApi.getNotesForProject(project.id);
+      
+      const formattedNotes = notesInProject.map(item => {
+        let dataObj = item.data;
+        let displayName = 'Без названия';
+        if (typeof dataObj === 'string') {
+          try {
+            dataObj = JSON.parse(dataObj);
+          } catch (e) {
+            dataObj = {};
+          }
+        }
+        if (dataObj && typeof dataObj === 'object') {
+          const values = Object.values(dataObj);
+          if (values.length > 0) {
+            displayName = String(values[0] || '');
+          }
+        }
+        return {
+          id: item.id,
+          name: displayName,
+          type: 'form',
+          icon: '/personalcard.svg',
+          data: dataObj,
+          project_id: item.project_id
+        };
+      });
+      
+      setProjectNotes(formattedNotes);
+      setSelectedResources(formattedNotes.map(note => note.id));
+      
+    } catch (error) {
+      console.error('Ошибка при загрузке ресурсов проекта:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleBackClick = () => {
     navigate('/dashboard');
   };
 
-  const handleAddResourceClick = () => {
-    setShowAddResourceModal(true);
+  const handleAddResourceClick = async () => {
+    try {
+      setLoading(true);
+      const allNotes = await noteApi.getNotes();
+      const freeNotesData = allNotes.filter(note => 
+        !note.project_id
+      );
+      
+      const formattedFreeNotes = freeNotesData.map(item => {
+        let dataObj = item.data;
+        let displayName = 'Без названия';
+        
+        if (typeof dataObj === 'string') {
+          try {
+            dataObj = JSON.parse(dataObj);
+          } catch (e) {
+            dataObj = {};
+          }
+        }
+        
+        if (dataObj && typeof dataObj === 'object') {
+          const values = Object.values(dataObj);
+          if (values.length > 0) {
+            displayName = String(values[0] || '');
+          }
+        }
+        
+        return {
+          id: item.id,
+          name: displayName,
+          type: 'form',
+          icon: '/personalcard.svg',
+          selected: false,
+          data: dataObj,
+          project_id: item.project_id
+        };
+      });
+      
+      setFreeNotes(formattedFreeNotes);
+      setShowAddResourceModal(true);
+      
+    } catch (error) {
+      console.error('Ошибка при загрузке свободных заметок:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleResourceSelect = (resourceId) => {
@@ -64,23 +144,50 @@ const ProjectPage = () => {
     });
   };
 
-  const handleSaveResources = () => {
-    // Логика сохранения выбранных ресурсов
-    console.log('Выбранные ресурсы:', selectedResources);
-    setShowAddResourceModal(false);
-    setSelectedResources([]);
+  const handleSaveResources = async () => {
+    try {
+      const newResources = selectedResources.filter(id => 
+        !projectNotes.some(note => note.id === id)
+      );
+      const removedResources = projectNotes
+        .filter(note => !selectedResources.includes(note.id))
+        .map(note => note.id);
+      for (const resourceId of newResources) {
+        const note = freeNotes.find(n => n.id === resourceId);
+        if (note) {
+          await noteApi.update(resourceId, note.data, project.id);
+        }
+      }
+      for (const resourceId of removedResources) {
+        const note = projectNotes.find(n => n.id === resourceId);
+        if (note) {
+          await noteApi.update(resourceId, note.data, null);
+        }
+      }
+      await loadProjectResources();
+      setShowAddResourceModal(false);
+      
+    } catch (error) {
+      console.error('Ошибка при сохранении ресурсов:', error);
+      alert('Ошибка при сохранении ресурсов');
+    }
   };
 
   const handleCancelResources = () => {
     setShowAddResourceModal(false);
-    setSelectedResources([]);
   };
 
-  const handleRemoveResource = (resourceId) => {
-    setSelectedResources(prev => prev.filter(id => id !== resourceId));
+  const handleRemoveResource = async (resourceId) => {
+    try {
+      const note = projectNotes.find(n => n.id === resourceId);
+      if (note) {
+        await noteApi.update(resourceId, note.data, null);
+        await loadProjectResources();
+      }
+    } catch (error) {
+      console.error('Ошибка при удалении ресурса:', error);
+    }
   };
-
-  // Обработчики для формы пользователя
   const handleUserDataChange = (field, value) => {
     setUserData(prev => ({
       ...prev,
@@ -89,7 +196,6 @@ const ProjectPage = () => {
   };
 
   const handleSaveUserData = () => {
-    // Логика сохранения данных пользователя
     console.log('Сохранение данных:', userData);
     setShowUserModal(false);
   };
@@ -99,14 +205,7 @@ const ProjectPage = () => {
       logout();
     }
   };
-
-  // Получаем первую букву ника для аватарки
   const userInitial = user?.username?.charAt(0)?.toUpperCase() || 'U';
-
-  // Получаем выбранные ресурсы для отображения
-  const selectedResourcesData = availableResources.filter(resource => 
-    selectedResources.includes(resource.id)
-  );
 
   return (
     <div className="project-page">
@@ -145,17 +244,18 @@ const ProjectPage = () => {
           <button
             className="btn btn-primary add-resource-centered"
             onClick={handleAddResourceClick}
+            disabled={loading}
           >
-            добавить ресурс
+            {loading ? 'Загрузка...' : 'управление ресурсами'}
           </button>
         </div>
 
         {/* Название проекта */}
         <h1 className="project-title">{project.name}</h1>
 
-        {/* Сетка добавленных ресурсов - такой же стиль как на главной */}
+        {/* Сетка добавленных ресурсов */}
         <div className="items-container">
-          {selectedResourcesData.map(resource => (
+          {projectNotes.map(resource => (
             <div key={resource.id} className="item-with-name">
               <div className="item-card square-card">
                 <div className="card-icon">
@@ -175,7 +275,7 @@ const ProjectPage = () => {
             </div>
           ))}
           
-          {selectedResourcesData.length === 0 && (
+          {projectNotes.length === 0 && (
             <div className="empty-state">
               <p>Добавьте ресурсы с помощью кнопки выше</p>
             </div>
@@ -198,26 +298,65 @@ const ProjectPage = () => {
             </div>
             
             <div className="resource-modal-content">
-              <div className="resources-list">
-                {availableResources.map(resource => (
-                  <div 
-                    key={resource.id} 
-                    className={`resource-item ${selectedResources.includes(resource.id) ? 'selected' : ''}`}
-                    onClick={() => handleResourceSelect(resource.id)}
-                  >
-                    <div className="resource-item-info">
-                      <img src={resource.icon} alt={resource.type} className="resource-item-icon" />
-                      <span className="resource-item-name">{resource.name}</span>
-                    </div>
-                    
-                    <div className="resource-checkbox">
-                      {selectedResources.includes(resource.id) && (
-                        <div className="checkmark">✓</div>
-                      )}
-                    </div>
+              {/* Секция свободных заметок */}
+              {freeNotes.length > 0 && (
+                <>
+                  <h4 className="resource-section-title">Свободные заметки</h4>
+                  <div className="resources-list">
+                    {freeNotes.map(resource => (
+                      <div 
+                        key={resource.id} 
+                        className={`resource-item ${selectedResources.includes(resource.id) ? 'selected' : ''}`}
+                        onClick={() => handleResourceSelect(resource.id)}
+                      >
+                        <div className="resource-item-info">
+                          <img src={resource.icon} alt={resource.type} className="resource-item-icon" />
+                          <span className="resource-item-name">{resource.name}</span>
+                        </div>
+                        
+                        <div className="resource-checkbox">
+                          {selectedResources.includes(resource.id) && (
+                            <div className="checkmark">✓</div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </>
+              )}
+              
+              {/* Секция заметок уже в проекте */}
+              {projectNotes.length > 0 && (
+                <>
+                  <h4 className="resource-section-title">Заметки в проекте</h4>
+                  <div className="resources-list">
+                    {projectNotes.map(resource => (
+                      <div 
+                        key={resource.id} 
+                        className={`resource-item selected`}
+                        onClick={() => handleResourceSelect(resource.id)}
+                      >
+                        <div className="resource-item-info">
+                          <img src={resource.icon} alt={resource.type} className="resource-item-icon" />
+                          <span className="resource-item-name">{resource.name}</span>
+                        </div>
+                        
+                        <div className="resource-checkbox">
+                          {selectedResources.includes(resource.id) && (
+                            <div className="checkmark">✓</div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+              
+              {freeNotes.length === 0 && projectNotes.length === 0 && (
+                <div className="empty-resources">
+                  <p>Нет доступных ресурсов</p>
+                </div>
+              )}
             </div>
             
             <div className="modal-actions-single">

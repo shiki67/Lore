@@ -5,6 +5,7 @@ from src.note.model import CreateNote, UpdateNote
 from src.note.service import NoteService
 from src.token.service import get_current_user_id
 from src.exception import NotFoundException
+from typing import Optional
 
 router = APIRouter()
 
@@ -14,8 +15,7 @@ async def add(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user_id)
     ):
-    create_data.user_id = user_id
-    id = NoteService(db).create(create_data)
+    id = NoteService(db).create(create_data, user_id)
     return {"note_id": id}
 
 @router.get("/note")
@@ -24,6 +24,14 @@ async def get(
     user_id: int = Depends(get_current_user_id)
 ):
     return NoteService(db).get_by_user_id(user_id)
+
+@router.get("/note/project/{project_id}")
+async def get(
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user_id),
+    project_id: Optional[int] = None,
+):
+    return NoteService(db).get_for_project(user_id, project_id)
 
 @router.get("/note/{id}")
 async def get_by_id(

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
-import { apiService } from '../api';
+import { apiService } from '../contexts/api';
+import { useNavigate } from 'react-router-dom';
 const RegisterPage = () => {
   const [nickname, setNickname] = useState('');
   const [email, setEmail] = useState('');
@@ -10,6 +11,7 @@ const RegisterPage = () => {
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -33,6 +35,7 @@ const RegisterPage = () => {
       return;
     }
     const result = await apiService.registration(nickname, email, password);
+    navigate('/login');
     setLoading(false);
   };
 
@@ -60,7 +63,7 @@ const RegisterPage = () => {
           </div>
 
           <div className="input-group">
-            <label className="input-label">Логин(почта/телефон)*</label>
+            <label className="input-label">Почта*</label>
             <input
               type="text"
               className="input"

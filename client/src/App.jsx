@@ -3,10 +3,10 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import DashboardPage from './pages/DashboardPage';
+import DashboardPage from './pages/DashBoardPage';
 import ProjectPage from './pages/ProjectPage';
 import './App.css';
-import { apiService } from './api';
+import { apiService } from './contexts/api';
 
 const ProtectedRoute = ({ children }) => {
   const isAuthenticated = apiService.isAuthenticated();

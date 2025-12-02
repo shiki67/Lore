@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { apiService } from '../api';
+import { apiService } from '../contexts/api';
+import { noteApi } from '../contexts/NotesApi';
 
 const DashboardPage = () => {
   const { user, logout } = useAuth();
@@ -55,9 +56,49 @@ const DashboardPage = () => {
         createdAt: project.created_at || new Date().toISOString(),
       }));
       setActiveItems(formattedProjects);
-    } catch (err) {
-    }
-  };
+    const allNotes = await noteApi.getNotes();
+    const freeNotes = allNotes.filter(note => 
+      !note.project_id || note.project_id === null || note.project_id === 0
+    );
+    const formattedFreeNotes = freeNotes.map(note => {
+      let displayName = 'Без названия';
+      let dataObj = note.data;
+      if (typeof dataObj === 'string') {
+        try {
+          dataObj = JSON.parse(dataObj);
+        } catch (e) {
+          dataObj = {};
+        }
+      }
+      if (dataObj && typeof dataObj === 'object') {
+        const values = Object.values(dataObj);
+        if (values.length > 0 && values[0]) {
+          displayName = String(values[0]);
+          if (displayName.length > 25) {
+            displayName = displayName.substring(0, 25) + '...';
+          }
+        }
+      }
+      
+      return {
+        id: note.id,
+        type: 'form',
+        name: displayName,
+        description: dataObj?.description || '',
+        icon: '/personalcard.svg',
+        color: '#4CAF50',
+        createdAt: note.created_at || new Date().toISOString(),
+        formData: dataObj,
+        project_id: note.project_id
+      };
+    });
+    const allItems = [...formattedProjects, ...formattedFreeNotes];
+    setActiveItems(allItems);
+    
+  } catch (err) {
+    console.error('Ошибка при загрузке данных:', err);
+  }
+};
   useEffect(() => {
   if (showUserModal) {
     if (user) {
@@ -109,12 +150,12 @@ const DashboardPage = () => {
     setShowFormModal(true);
   };
 
-  const handleSaveForm = () => {
+  const handleSaveForm = async () => {
     if (!formData.fullName.trim()) {
       alert('Поле "Полное имя" обязательно для заполнения');
       return;
     }
-
+    await noteApi.addForm(formData);
     const newItem = {
       id: Date.now(),
       type: 'form',
@@ -532,28 +573,6 @@ const DashboardPage = () => {
                     value={userData.email}
                     onChange={(e) => handleUserDataChange('email', e.target.value)}
                     placeholder="Введите email"
-                  />
-                </div>
-                
-                <div className="form-row">
-                  <label className="form-label">Пароль</label>
-                  <input
-                    type="password"
-                    className="form-input-wide"
-                    value={userData.password}
-                    onChange={(e) => handleUserDataChange('password', e.target.value)}
-                    placeholder="Введите новый пароль"
-                  />
-                </div>
-                
-                <div className="form-row">
-                  <label className="form-label">Повторите пароль</label>
-                  <input
-                    type="password"
-                    className="form-input-wide"
-                    value={userData.confirmPassword}
-                    onChange={(e) => handleUserDataChange('confirmPassword', e.target.value)}
-                    placeholder="Повторите пароль"
                   />
                 </div>
               </div>
