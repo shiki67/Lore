@@ -10,15 +10,28 @@ const ProjectPage = () => {
   const [showUserModal, setShowUserModal] = useState(false);
   const [showAddResourceModal, setShowAddResourceModal] = useState(false);
   const [selectedResources, setSelectedResources] = useState([]);
+<<<<<<< HEAD
   const [availableResources, setAvailableResources] = useState([]);
   const [projectNotes, setProjectNotes] = useState([])
   const [freeNotes, setFreeNotes] = useState([]);
   const [loading, setLoading] = useState(false);
+=======
+  
+>>>>>>> f68cc5b338148da443e4fbd11ba8bf2111281b7e
   const project = location.state?.project || { 
     id: 1, 
     name: 'Название проекта',
     description: 'Описание проекта'
   };
+<<<<<<< HEAD
+=======
+
+  const availableResources = [
+    { id: 1, name: 'Анкета клиента', type: 'form', icon: '/personalcard.svg', selected: false },
+    { id: 2, name: 'Анкета сотрудника', type: 'form', icon: '/personalcard.svg', selected: false }
+  ];
+
+>>>>>>> f68cc5b338148da443e4fbd11ba8bf2111281b7e
   const [userData, setUserData] = useState({
     nickname: '',
     email: '',
@@ -26,7 +39,12 @@ const ProjectPage = () => {
     password: '',
     confirmPassword: ''
   });
+<<<<<<< HEAD
   useEffect(() => {
+=======
+
+  useState(() => {
+>>>>>>> f68cc5b338148da443e4fbd11ba8bf2111281b7e
     if (showUserModal && user) {
       setUserData({
         nickname: user.username || '',
@@ -144,6 +162,7 @@ const ProjectPage = () => {
     });
   };
 
+<<<<<<< HEAD
   const handleSaveResources = async () => {
     try {
       const newResources = selectedResources.filter(id => 
@@ -171,6 +190,12 @@ const ProjectPage = () => {
       console.error('Ошибка при сохранении ресурсов:', error);
       alert('Ошибка при сохранении ресурсов');
     }
+=======
+  const handleSaveResources = () => {
+    console.log('Выбранные ресурсы:', selectedResources);
+    setShowAddResourceModal(false);
+    setSelectedResources([]);
+>>>>>>> f68cc5b338148da443e4fbd11ba8bf2111281b7e
   };
 
   const handleCancelResources = () => {
@@ -188,6 +213,11 @@ const ProjectPage = () => {
       console.error('Ошибка при удалении ресурса:', error);
     }
   };
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> f68cc5b338148da443e4fbd11ba8bf2111281b7e
   const handleUserDataChange = (field, value) => {
     setUserData(prev => ({
       ...prev,
@@ -205,11 +235,18 @@ const ProjectPage = () => {
       logout();
     }
   };
+<<<<<<< HEAD
   const userInitial = user?.username?.charAt(0)?.toUpperCase() || 'U';
+=======
+
+  const userInitial = user?.username?.charAt(0)?.toUpperCase() || 'U';
+  const selectedResourcesData = availableResources.filter(resource => 
+    selectedResources.includes(resource.id)
+  );
+>>>>>>> f68cc5b338148da443e4fbd11ba8bf2111281b7e
 
   return (
     <div className="project-page">
-      {/* Верхняя плашка с лого */}
       <nav className="dashboard-nav">
         <button 
           className="nav-btn-circle"
@@ -230,9 +267,7 @@ const ProjectPage = () => {
         </button>
       </nav>
 
-      {/* Контент страницы проекта */}
       <div className="project-content">
-        {/* Навигация назад и кнопка добавления */}
         <div className="project-header">
           <button 
             className="back-arrow"
@@ -250,10 +285,12 @@ const ProjectPage = () => {
           </button>
         </div>
 
-        {/* Название проекта */}
         <h1 className="project-title">{project.name}</h1>
 
+<<<<<<< HEAD
         {/* Сетка добавленных ресурсов */}
+=======
+>>>>>>> f68cc5b338148da443e4fbd11ba8bf2111281b7e
         <div className="items-container">
           {projectNotes.map(resource => (
             <div key={resource.id} className="item-with-name">

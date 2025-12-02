@@ -43,6 +43,7 @@ const DashboardPage = () => {
     loadProjects();
   }, []);
 
+<<<<<<< HEAD
   const loadProjects = async () => {
     try {
       const projects = await apiService.getAllProjects();
@@ -99,6 +100,8 @@ const DashboardPage = () => {
     console.error('Ошибка при загрузке данных:', err);
   }
 };
+=======
+>>>>>>> f68cc5b338148da443e4fbd11ba8bf2111281b7e
   useEffect(() => {
   if (showUserModal) {
     if (user) {
@@ -193,7 +196,10 @@ const DashboardPage = () => {
     apiService.addProject(projectName, projectDescription)
     setActiveItems([...activeItems, newItem]);
     setShowProjectModal(false);
+<<<<<<< HEAD
     loadProjects();
+=======
+>>>>>>> f68cc5b338148da443e4fbd11ba8bf2111281b7e
     navigate('/project', { state: { project: newItem } });
   };
 
@@ -244,6 +250,7 @@ const DashboardPage = () => {
     }));
   };
 
+<<<<<<< HEAD
   const handleLogout = () => {
     apiService.logout();
     navigate('/login');
@@ -252,6 +259,25 @@ const DashboardPage = () => {
     console.log('Создание шаблона - функция в разработке');
   };
   const userInitial = userData?.nickname?.charAt(0)?.toUpperCase() || 'U';
+=======
+  const handleSaveUserData = () => {
+    console.log('Сохранение данных:', userData);
+    setShowUserModal(false);
+  };
+
+  const handleDeleteAccount = () => {
+    if (window.confirm('Вы уверены, что хотите удалить аккаунт? Это действие нельзя отменить.')) {
+      logout();
+    }
+  };
+
+
+  const handleCreateTemplate = () => {
+    console.log('Создание шаблона - функция в разработке');
+  };
+
+  const userInitial = user?.username?.charAt(0)?.toUpperCase() || 'U';
+>>>>>>> f68cc5b338148da443e4fbd11ba8bf2111281b7e
   const formInitial = formData.fullName.charAt(0)?.toUpperCase() || 'A';
 
   return (
@@ -276,12 +302,10 @@ const DashboardPage = () => {
         </button>
       </nav>
 
-      {/* Основной контент */}
+
       <div className="dashboard-content">
-        {/* Заголовок */}
         <h2 className="world-title">создай свой мир</h2>
         
-        {/* Кнопки создания */}
         <div className="creation-buttons">
           <button
             className="creation-btn black-outline-btn"
@@ -368,10 +392,18 @@ const DashboardPage = () => {
             </div>
             
             <div className="user-profile" style={{ padding: '1.5rem' }}>
+<<<<<<< HEAD
+=======
+
+>>>>>>> f68cc5b338148da443e4fbd11ba8bf2111281b7e
               <div style={{ display: 'flex', gap: '2rem', marginBottom: '2rem', alignItems: 'flex-start' }}>
                 <div className="user-avatar-outline" style={{ width: '80px', height: '80px', flexShrink: 0, marginTop: '0.5rem' }}>
                   {formInitial}
                 </div>
+<<<<<<< HEAD
+=======
+                
+>>>>>>> f68cc5b338148da443e4fbd11ba8bf2111281b7e
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem', minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <label style={{ width: '140px', textAlign: 'right', fontFamily: 'Poppins, sans-serif', fontSize: '1rem', flexShrink: 0 }}>
@@ -386,6 +418,10 @@ const DashboardPage = () => {
                       style={{ flex: 1 }}
                     />
                   </div>
+<<<<<<< HEAD
+=======
+                  
+>>>>>>> f68cc5b338148da443e4fbd11ba8bf2111281b7e
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <label style={{ width: '140px', textAlign: 'right', fontFamily: 'Poppins, sans-serif', fontSize: '1rem', flexShrink: 0 }}>
                       Сокращенное имя
@@ -399,6 +435,10 @@ const DashboardPage = () => {
                       style={{ flex: 1 }}
                     />
                   </div>
+<<<<<<< HEAD
+=======
+                  
+>>>>>>> f68cc5b338148da443e4fbd11ba8bf2111281b7e
                   <div style={{ display: 'flex', gap: '1rem', marginLeft: '56px' }}>
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <label style={{ width: '90px', textAlign: 'right', fontFamily: 'Poppins, sans-serif', fontSize: '0.9rem', flexShrink: 0 }}>
@@ -444,6 +484,10 @@ const DashboardPage = () => {
                   </div>
                 </div>
               </div>
+<<<<<<< HEAD
+=======
+              
+>>>>>>> f68cc5b338148da443e4fbd11ba8bf2111281b7e
               <div style={{ marginBottom: '1.5rem' }}>
                 <label style={{ display: 'block', fontFamily: 'Poppins, sans-serif', fontSize: '1rem', marginBottom: '0.5rem' }}>
                   Описание
@@ -457,6 +501,10 @@ const DashboardPage = () => {
                   style={{ width: '100%' }}
                 />
               </div>
+<<<<<<< HEAD
+=======
+              
+>>>>>>> f68cc5b338148da443e4fbd11ba8bf2111281b7e
               <div style={{ marginBottom: '1rem' }}>
                 <label style={{ display: 'block', fontFamily: 'Poppins, sans-serif', fontSize: '1rem', marginBottom: '0.5rem' }}>
                   История
