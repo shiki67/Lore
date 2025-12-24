@@ -3,6 +3,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { apiService } from '../contexts/api';
 import { noteApi } from '../contexts/NotesApi';
+import UserModal from '../components/UserModal';
+import FormModal from '../components/FormModal';
+import { patternApi } from '../contexts/PatternApi';
+import TemplatesModal from '../components/TemplatesModal';
+import TemplateFormModal from '../components/TemplateFormModal';
 
 const DashboardPage = () => {
   const { user, logout } = useAuth();
@@ -21,7 +26,11 @@ const DashboardPage = () => {
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
   const [projectError, setProjectError] = useState('');
-
+  const [showTemplatesModal, setShowTemplatesModal] = useState(false); 
+  const [showNoteTypeModal, setShowNoteTypeModal] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [showTemplateFormModal, setShowTemplateFormModal] = useState(false);
+  const [templateFormMode, setTemplateFormMode] = useState('add');
   const [formData, setFormData] = useState({
     fullName: '',
     shortName: '',
@@ -31,6 +40,25 @@ const DashboardPage = () => {
     description: '',
     history: ''
   });
+  const [modalMode, setModalMode] = useState('add');
+  const [selectedNoteId, setSelectedNoteId] = useState(null);
+
+    const handleViewForm = (noteId) => {
+        setModalMode('view');
+        setSelectedNoteId(noteId);
+        setShowFormModal(true);
+    };
+    const handleEditForm = (noteId) => {
+        setModalMode('edit');
+        setSelectedNoteId(noteId);
+        setShowFormModal(true);
+    };
+    const handleSwitchToEdit = (noteId) => {
+    setModalMode('edit');
+    setSelectedNoteId(noteId);
+};
+
+
 
   const [userData, setUserData] = useState({
     nickname: '',
@@ -89,7 +117,8 @@ const DashboardPage = () => {
         color: '#4CAF50',
         createdAt: note.created_at || new Date().toISOString(),
         formData: dataObj,
-        project_id: note.project_id
+        project_id: note.project_id,
+        pattern_id: note.pattern_id || 0
       };
     });
     const allItems = [...formattedProjects, ...formattedFreeNotes];
@@ -129,7 +158,18 @@ const DashboardPage = () => {
     { id: 'project', name: 'Проект', icon: '/project.svg', color: '#29ABE2' },
     { id: 'form', name: 'Анкета', icon: '/personalcard.svg', color: '#4CAF50' }
   ];
-
+  const handleDelete = async (noteId) => {
+        if (window.confirm('Вы уверены, что хотите удалить эту анкету?')) {
+            try {
+                await noteApi.delete(noteId);
+            } catch (error) {
+                console.error('Ошибка при удалении:', error);
+                setError('Не удалось удалить анкету');
+            } finally {
+                loadProjects();
+            }
+        }
+    };
   const handleAddProject = () => {
     setProjectName('');
     setProjectDescription('');
@@ -137,39 +177,71 @@ const DashboardPage = () => {
     setShowProjectModal(true);
   };
 
-  const handleAddForm = () => {
-    setFormData({
-      fullName: '',
-      shortName: '',
-      birthDate: '',
-      age: '',
-      race: '',
-      description: '',
-      history: ''
-    });
-    setShowFormModal(true);
-  };
-
-  const handleSaveForm = async () => {
-    if (!formData.fullName.trim()) {
-      alert('Поле "Полное имя" обязательно для заполнения');
-      return;
-    }
-    await noteApi.addForm(formData);
-    const newItem = {
-      id: Date.now(),
-      type: 'form',
-      name: formData.shortName || formData.fullName,
-      description: formData.description,
-      icon: '/personalcard.svg',
-      color: '#4CAF50',
-      createdAt: new Date().toISOString(),
-      formData: { ...formData }
+  // const handleAddForm = () => {
+  //   setFormData({
+  //     fullName: '',
+  //     shortName: '',
+  //     birthDate: '',
+  //     age: '',
+  //     race: '',
+  //     description: '',
+  //     history: ''
+  //   });
+  //   setShowFormModal(true);
+  // };
+    const handleAddForm = () => {
+        setModalMode('add');
+        setSelectedNoteId(null);
+        setShowFormModal(true);
+        setFormData({
+            fullName: '',
+            shortName: '',
+            birthDate: '',
+            age: '',
+            race: '',
+            description: '',
+            history: ''
+        });
     };
+
+  // const handleSaveForm = async () => {
+  //   if (!formData.fullName.trim()) {
+  //     alert('Поле "Полное имя" обязательно для заполнения');
+  //     return;
+  //   }
+  //   await noteApi.addForm(formData);
+  //   const newItem = {
+  //     id: Date.now(),
+  //     type: 'form',
+  //     name: formData.shortName || formData.fullName,
+  //     description: formData.description,
+  //     icon: '/personalcard.svg',
+  //     color: '#4CAF50',
+  //     createdAt: new Date().toISOString(),
+  //     formData: { ...formData }
+  //   };
   
-    setActiveItems([...activeItems, newItem]);
-    setShowFormModal(false);
+  //   setActiveItems([...activeItems, newItem]);
+  //   setShowFormModal(false);
+  // };
+    const handleDeleteForm = async (noteId) => {
+      if (window.confirm('Вы уверены, что хотите удалить эту анкету?')) {
+          await noteApi.delete(noteId);
+          loadProjects();
+          setShowFormModal(false);
+      }
   };
+      const handleFormSuccess = () => {
+        loadProjects();
+    };
+    const handleSaveForm = async (noteId, formData) => {
+        if (modalMode === 'add') {
+            await noteApi.addForm(formData);
+        } else if (modalMode === 'edit' && noteId) {
+            await noteApi.update(noteId, formData);
+        }
+        loadProjects();
+    };
 
   const handleCancelForm = () => {
     setShowFormModal(false);
@@ -181,16 +253,17 @@ const DashboardPage = () => {
       return;
     }
 
+    const resp = apiService.addProject(projectName, projectDescription)
+    
     const newItem = {
-      id: Date.now(),
+      id: resp.project_id,
       type: 'project',
       name: projectName,
       description: projectDescription,
       icon: '/project.svg',
       color: '#29ABE2',
-      createdAt: new Date().toISOString()
+      
     };
-    apiService.addProject(projectName, projectDescription)
     setActiveItems([...activeItems, newItem]);
     setShowProjectModal(false);
     loadProjects();
@@ -244,16 +317,67 @@ const DashboardPage = () => {
     }));
   };
 
-  const handleLogout = () => {
-    apiService.logout();
-    navigate('/login');
-  };
+
   const handleCreateTemplate = () => {
     console.log('Создание шаблона - функция в разработке');
   };
   const userInitial = userData?.nickname?.charAt(0)?.toUpperCase() || 'U';
   const formInitial = formData.fullName.charAt(0)?.toUpperCase() || 'A';
+  const createNoteFromTemplate = (template) => {
+    console.log('Создание заметки по шаблону:', template); // Для отладки
+    console.log('ID шаблона:', template.id); // Для отладки
+    
+    // Убедитесь, что шаблон имеет ID
+    if (!template.id || template.id === 0) {
+      alert('Ошибка: неверный ID шаблона');
+      return;
+    }
+    
+    setSelectedTemplate(template);
+    setTemplateFormMode('add');
+    setShowTemplateFormModal(true);
+  };
+  const handleViewTemplateNote = async (noteId) => {
+    try {
+        // Загружаем заметку
+        const note = await noteApi.getNoteById(noteId);
+        if (note.pattern_id !== 0) {
+            // Если это заметка по шаблону, загружаем шаблон
+            const template = await patternApi.getById(note.pattern_id);
+            setSelectedTemplate(template);
+            setTemplateFormMode('view');
+            setSelectedNoteId(noteId);
+            setShowTemplateFormModal(true);
+        } else {
+            // Если стандартная анкета - используем FormModal
+            handleViewForm(noteId);
+        }
+    } catch (error) {
+        console.error('Ошибка при загрузке заметки:', error);
+    }
+  };
 
+  const handleEditTemplateNote = async (noteId) => {
+      try {
+          const note = await noteApi.getNoteById(noteId);
+          if (note.pattern_id !== 0) {
+              const template = await patternApi.getById(note.pattern_id);
+              setSelectedTemplate(template);
+              setTemplateFormMode('edit');
+              setSelectedNoteId(noteId);
+              setShowTemplateFormModal(true);
+          } else {
+              handleEditForm(noteId);
+          }
+      } catch (error) {
+          console.error('Ошибка при загрузке заметки:', error);
+      }
+  };
+
+  const handleSwitchToTemplateEdit = (noteId) => {
+      setTemplateFormMode('edit');
+      // noteId уже установлен, просто меняем режим
+  };
   return (
     <div className="dashboard-page">
       <nav className="dashboard-nav">
@@ -299,191 +423,198 @@ const DashboardPage = () => {
           
           <button
             className="creation-btn black-outline-btn"
-            onClick={handleCreateTemplate}
-            style={{ opacity: 0.6, cursor: 'not-allowed' }}
+            onClick={() => setShowTemplatesModal(true)}
           >
-            создать новый шаблон
+            шаблоны
           </button>
         </div>
 
         <div className="items-container">
-          {activeItems.map(item => (
-            <div 
-              key={item.id} 
-              className="item-with-name"
-              onClick={() => item.type === 'project' && handleProjectClick(item)}
-              style={{ cursor: item.type === 'project' ? 'pointer' : 'default' }}
-            >
-              <div className="item-card square-card">
-                <div className="card-icon">
-                  <img src={item.icon} alt={item.type} className="item-type-icon" />
-                </div>
-                
-                <button 
-                  className="delete-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleRemoveItem(item.id);
-                  }}
+            {activeItems.map(item => (
+                <div 
+                    key={`${item.type}-${item.id}`} 
+                    className="item-with-name"
+                    onClick={() => {
+                        if (item.type === 'project') {
+                            handleProjectClick(item);
+                        } else if (item.type === 'form') {
+                            handleViewTemplateNote(item.id);
+                        }
+                    }}
+                    style={{ 
+                        cursor: item.type === 'project' || item.type === 'form' ? 'pointer' : 'default' 
+                    }}
                 >
-                  <img src="/delete.svg" alt="Удалить" className="delete-icon" />
-                </button>
-                
-                {item.description && (
-                  <div className="item-description">
-                    {item.description}
-                  </div>
-                )}
-              </div>
-              <div className="item-name">
-                {item.name}
-              </div>
-            </div>
-          ))}
-          
-          {activeItems.length === 0 && (
-            <div className="empty-state">
-              <p>Начните создавать элементы с помощью кнопок выше</p>
-            </div>
-          )}
+                    <div className="item-card square-card"
+                            onClick={() => {
+                                if (item.type === 'project') {
+                                    handleProjectClick(item);
+                                } else if (item.type === 'form') {
+                                
+                                    if (item.pattern_id && item.pattern_id !== 0) {
+                                        
+                                    } else {
+                                        handleViewForm(item.id);
+                                    }
+                                }
+                            }}>
+                        <div className="card-icon">
+                            <img src={item.icon} alt={item.type} className="item-type-icon" />
+                            
+                        </div>
+                        <button 
+                            className="delete-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (item.type === 'form') {
+                                handleDelete(item.id);
+                              }
+                            }}
+                        >
+                            <img src="/delete.svg" alt="Удалить" className="delete-icon" />
+                        </button>
+                        
+                        {item.description && (
+                            <div className="item-description">
+                                {item.description}
+                            </div>
+                        )}
+                    </div>
+                    <div className="item-name">
+                        {item.name}
+                    </div>
+                </div>
+            ))}
+            
+            {activeItems.length === 0 && (
+                <div className="empty-state">
+                    <p>Начните создавать элементы с помощью кнопок выше</p>
+                </div>
+            )}
         </div>
       </div>
-
-      {showFormModal && (
-        <div className="modal-overlay" onClick={handleCancelForm} style={{ overflowY: 'auto', padding: '2rem 0' }}>
-          <div className="user-modal-wide" onClick={(e) => e.stopPropagation()} style={{ 
-            maxWidth: '900px', 
-            width: '90vw', 
-            margin: 'auto',
-            position: 'relative'
-          }}>
+      {/* Модальное окно выбора типа заметки */}
+      {showNoteTypeModal && (
+        <div className="modal-overlay" onClick={() => setShowNoteTypeModal(false)}>
+          <div className="user-modal-wide" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px' }}>
             <div className="modal-header">
-              <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '400' }}>Создание анкеты</h3>
+              <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '400' }}>Создание заметки</h3>
               <button 
                 className="modal-close"
-                onClick={handleCancelForm}
+                onClick={() => setShowNoteTypeModal(false)}
               >
                 ×
               </button>
             </div>
             
-            <div className="user-profile" style={{ padding: '1.5rem' }}>
-              <div style={{ display: 'flex', gap: '2rem', marginBottom: '2rem', alignItems: 'flex-start' }}>
-                <div className="user-avatar-outline" style={{ width: '80px', height: '80px', flexShrink: 0, marginTop: '0.5rem' }}>
-                  {formInitial}
-                </div>
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem', minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <label style={{ width: '140px', textAlign: 'right', fontFamily: 'Poppins, sans-serif', fontSize: '1rem', flexShrink: 0 }}>
-                      Полное имя
-                    </label>
-                    <input
-                      type="text"
-                      className="input"
-                      value={formData.fullName}
-                      onChange={(e) => handleFormDataChange('fullName', e.target.value)}
-                      placeholder="Введите полное имя"
-                      style={{ flex: 1 }}
-                    />
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <label style={{ width: '140px', textAlign: 'right', fontFamily: 'Poppins, sans-serif', fontSize: '1rem', flexShrink: 0 }}>
-                      Сокращенное имя
-                    </label>
-                    <input
-                      type="text"
-                      className="input"
-                      value={formData.shortName}
-                      onChange={(e) => handleFormDataChange('shortName', e.target.value)}
-                      placeholder="Введите сокращенное имя"
-                      style={{ flex: 1 }}
-                    />
-                  </div>
-                  <div style={{ display: 'flex', gap: '1rem', marginLeft: '56px' }}>
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <label style={{ width: '90px', textAlign: 'right', fontFamily: 'Poppins, sans-serif', fontSize: '0.9rem', flexShrink: 0 }}>
-                        Дата рождения
-                      </label>
-                      <input
-                        type="text"
-                        className="input"
-                        value={formData.birthDate}
-                        onChange={(e) => handleFormDataChange('birthDate', e.target.value)}
-                        placeholder="дд.мм.гггг"
-                        style={{ flex: 1 }}
-                      />
-                    </div>
-                    
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <label style={{ width: '60px', textAlign: 'right', fontFamily: 'Poppins, sans-serif', fontSize: '0.9rem', flexShrink: 0 }}>
-                        Возраст
-                      </label>
-                      <input
-                        type="text"
-                        className="input"
-                        value={formData.age}
-                        onChange={(e) => handleFormDataChange('age', e.target.value)}
-                        placeholder="Возраст"
-                        style={{ flex: 1 }}
-                      />
-                    </div>
-                    
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <label style={{ width: '40px', textAlign: 'right', fontFamily: 'Poppins, sans-serif', fontSize: '0.9rem', flexShrink: 0 }}>
-                        Раса
-                      </label>
-                      <input
-                        type="text"
-                        className="input"
-                        value={formData.race}
-                        onChange={(e) => handleFormDataChange('race', e.target.value)}
-                        placeholder="Раса"
-                        style={{ flex: 1 }}
-                      />
-                    </div>
-                  </div>
-                </div>
+            <div className="modal-content" style={{ padding: '1.5rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <button 
+                  className="black-outline-btn"
+                  onClick={() => {
+                    setShowNoteTypeModal(false);
+                    handleAddForm(); // Стандартная анкета персонажа
+                  }}
+                  style={{ width: '100%', padding: '1rem' }}
+                >
+                  Персонаж (стандартная анкета)
+                </button>
+                
+                <button 
+                  className="black-outline-btn"
+                  onClick={() => {
+                    setShowNoteTypeModal(false);
+                    setShowTemplatesModal(true);
+                  }}
+                  style={{ width: '100%', padding: '1rem' }}
+                >
+                  По шаблону
+                </button>
               </div>
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', fontFamily: 'Poppins, sans-serif', fontSize: '1rem', marginBottom: '0.5rem' }}>
-                  Описание
-                </label>
-                <textarea
-                  className="input textarea"
-                  value={formData.description}
-                  onChange={(e) => handleFormDataChange('description', e.target.value)}
-                  placeholder="Введите описание"
-                  rows="3"
-                  style={{ width: '100%' }}
-                />
-              </div>
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', fontFamily: 'Poppins, sans-serif', fontSize: '1rem', marginBottom: '0.5rem' }}>
-                  История
-                </label>
-                <textarea
-                  className="input textarea"
-                  value={formData.history}
-                  onChange={(e) => handleFormDataChange('history', e.target.value)}
-                  placeholder="Введите историю"
-                  rows="3"
-                  style={{ width: '100%' }}
-                />
-              </div>
-            </div>
-            
-            <div className="modal-actions-single" style={{ justifyContent: 'flex-end', padding: '1.5rem' }}>
-              <button 
-                className="btn btn-primary"
-                onClick={handleSaveForm}
-                style={{ minWidth: '140px' }}
-              >
-                СОХРАНИТЬ
-              </button>
             </div>
           </div>
         </div>
       )}
+
+{/* Модальное окно выбора типа заметки */}
+      {showNoteTypeModal && (
+        <div className="modal-overlay" onClick={() => setShowNoteTypeModal(false)}>
+          <div className="user-modal-wide" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+            <div className="modal-header">
+              <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '400' }}>Создание заметки</h3>
+              <button 
+                className="modal-close"
+                onClick={() => setShowNoteTypeModal(false)}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="modal-content" style={{ padding: '1.5rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <button 
+                  className="black-outline-btn"
+                  onClick={() => {
+                    setShowNoteTypeModal(false);
+                    handleAddForm(); // Стандартная анкета персонажа
+                  }}
+                  style={{ width: '100%', padding: '1rem' }}
+                >
+                  Персонаж (стандартная анкета)
+                </button>
+                
+                <button 
+                  className="black-outline-btn"
+                  onClick={() => {
+                    setShowNoteTypeModal(false);
+                    setShowTemplatesModal(true);
+                  }}
+                  style={{ width: '100%', padding: '1rem' }}
+                >
+                  По шаблону
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Модальное окно шаблонов */}
+      {showTemplatesModal && (
+        <TemplatesModal
+          showTemplatesModal={showTemplatesModal}
+          setShowTemplatesModal={setShowTemplatesModal}
+          onTemplateSelect={createNoteFromTemplate}
+          mode="select"
+        />
+      )}
+
+      {/* Модальное окно создания заметки по шаблону */}
+      {showTemplateFormModal && selectedTemplate && (
+          <TemplateFormModal
+              showFormModal={showTemplateFormModal}
+              setShowFormModal={setShowTemplateFormModal}
+              template={selectedTemplate}
+              mode={templateFormMode}
+              noteId={selectedNoteId}
+              onSuccess={handleFormSuccess}
+              onCancel={() => {
+                  setShowTemplateFormModal(false);
+                  setSelectedTemplate(null);
+                  setSelectedNoteId(null);
+              }}
+              onSwitchToEdit={handleSwitchToTemplateEdit}
+          />
+      )}
+      {showFormModal &&     <FormModal
+              showFormModal={showFormModal}
+              setShowFormModal={setShowFormModal}
+              mode={modalMode}
+              noteId={selectedNoteId}
+              onSuccess={handleFormSuccess}
+              onCancel={() => setShowFormModal(false)}
+              onSwitchToEdit={handleSwitchToEdit}
+    />}
       {showProjectModal && (
         <div className="modal-overlay" onClick={handleCancelProject}>
           <div className="project-modal" onClick={(e) => e.stopPropagation()}>
@@ -537,58 +668,15 @@ const DashboardPage = () => {
         </div>
       )}
       {showUserModal && (
-        <div className="modal-overlay" onClick={() => setShowUserModal(false)}>
-          <div className="user-modal-wide" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <button 
-                className="modal-close"
-                onClick={() => setShowUserModal(false)}
-              >
-                ×
-              </button>
-            </div>
+          <UserModal
+            showUserModal={showUserModal}
+            setShowUserModal={setShowUserModal}
+            userInitial={userInitial}
+            userData={userData}
+            handleUserDataChange={handleUserDataChange}
             
-            <div className="user-profile">
-              <div className="user-avatar-large">
-                {userInitial}
-              </div>
-              
-              <div className="user-form">
-                <div className="form-row">
-                  <label className="form-label">Никнейм</label>
-                  <input
-                    type="text"
-                    className="form-input-wide"
-                    value={userData.nickname}
-                    onChange={(e) => handleUserDataChange('nickname', e.target.value)}
-                    placeholder="Введите никнейм"
-                  />
-                </div>
-                
-                <div className="form-row">
-                  <label className="form-label">Почта</label>
-                  <input
-                    type="email"
-                    className="form-input-wide"
-                    value={userData.email}
-                    onChange={(e) => handleUserDataChange('email', e.target.value)}
-                    placeholder="Введите email"
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <div className="modal-actions-double-wide">
-              <button 
-                className="btn btn-primary"
-                onClick={handleLogout}
-              >
-                ВЫЙТИ ИЗ АККАУНТА
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          />
+        )}
     </div>
   );
 };

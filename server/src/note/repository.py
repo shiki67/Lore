@@ -31,6 +31,7 @@ class NoteRepository:
         if note:
             update_dict = update_data.model_dump()
             update_dict.pop('id', None)
+            update_dict.pop('pattern_id', None)
             for key, value in update_dict.items():
                 if hasattr(note, key):
                     setattr(note, key, value)

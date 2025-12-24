@@ -22,7 +22,7 @@ class Pattern(Base):
             session.commit()
 
 class CreatePattern(BaseModel):
-    name: int
+    name: str
     fields: List[str]
     user_id: Optional[int] = None
 

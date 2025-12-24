@@ -16,13 +16,15 @@ class NoteApi {
     });
     return apiService.handleResponse(response);
   }
-    async getNotesForProject(project_id) {
+  async getNotesForProject(project_id) {
     const response = await fetch(`${apiService.baseURL}/note/project/${project_id}`, {
       method: 'GET',
       headers: apiService.getHeaders(),
       credentials: 'include'
     });
-    return apiService.handleResponse(response);
+    const notes = await apiService.handleResponse(response);
+    console.log('API: Заметки для проекта', project_id, ':', notes); // Для отладки
+    return notes;
   }
   async getNotesWithoutProject() {
     const allNotes = await this.getNotes();
@@ -42,11 +44,12 @@ class NoteApi {
     return apiService.handleResponse(response);
   }
 
-    async addForm(data) {
+    async addForm(data, pattern_id) {
     const requestBody = {
         data: data,
-        pattern_id: 0,
+        pattern_id: pattern_id,
     };
+    console.log('Тело запроса для создания:', requestBody);
     const response = await fetch(`${apiService.baseURL}/note`, {
         method: 'POST',
         headers: apiService.getHeaders(),
@@ -57,6 +60,7 @@ class NoteApi {
     }
 
   async update(id, data, project_id) {
+    console.log(data, project_id);
     const response = await fetch(`${apiService.baseURL}/note/${id}`, {
       method: 'PUT',
       headers: apiService.getHeaders(),

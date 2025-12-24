@@ -2,23 +2,35 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { noteApi } from '../contexts/NotesApi';
+import { patternApi } from '../contexts/PatternApi';
+import UserModal from '../components/UserModal';
+import FormModal from '../components/FormModal';
+import TemplateFormModal from '../components/TemplateFormModal';
 
 const ProjectPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [showUserModal, setShowUserModal] = useState(false);
   const [showAddResourceModal, setShowAddResourceModal] = useState(false);
   const [selectedResources, setSelectedResources] = useState([]);
   const [availableResources, setAvailableResources] = useState([]);
-  const [projectNotes, setProjectNotes] = useState([])
+  const [projectNotes, setProjectNotes] = useState([]);
   const [freeNotes, setFreeNotes] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [modalMode, setModalMode] = useState('view');
+  const [selectedNoteId, setSelectedNoteId] = useState(null);
+  const [showTemplateFormModal, setShowTemplateFormModal] = useState(false);
+  const [templateFormMode, setTemplateFormMode] = useState('view');
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  
   const project = location.state?.project || { 
     id: 1, 
     name: 'Название проекта',
     description: 'Описание проекта'
   };
+  
   const [userData, setUserData] = useState({
     nickname: '',
     email: '',
@@ -26,6 +38,7 @@ const ProjectPage = () => {
     password: '',
     confirmPassword: ''
   });
+
   useEffect(() => {
     if (showUserModal && user) {
       setUserData({
@@ -37,102 +50,179 @@ const ProjectPage = () => {
       });
     }
   }, [showUserModal, user]);
+
   useEffect(() => {
     loadProjectResources();
   }, [project.id]);
 
-  const loadProjectResources = async () => {
-    try {
-      setLoading(true);
-      const notesInProject = await noteApi.getNotesForProject(project.id);
+const loadProjectResources = async () => {
+  try {
+    setLoading(true);
+    const notesInProject = await noteApi.getNotesForProject(project.id);
+    
+    console.log('Заметки в проекте (сырые данные):', notesInProject); // Для отладки
+    
+    const formattedNotes = notesInProject.map(item => {
+      console.log('Заметка ID:', item.id, 'pattern_id:', item.pattern_id); // Для отладки
       
-      const formattedNotes = notesInProject.map(item => {
-        let dataObj = item.data;
-        let displayName = 'Без названия';
-        if (typeof dataObj === 'string') {
-          try {
-            dataObj = JSON.parse(dataObj);
-          } catch (e) {
-            dataObj = {};
-          }
+      let dataObj = item.data;
+      let displayName = 'Без названия';
+      
+      if (typeof dataObj === 'string') {
+        try {
+          dataObj = JSON.parse(dataObj);
+        } catch (e) {
+          dataObj = {};
         }
-        if (dataObj && typeof dataObj === 'object') {
-          const values = Object.values(dataObj);
-          if (values.length > 0) {
-            displayName = String(values[0] || '');
-          }
+      }
+      
+      if (dataObj && typeof dataObj === 'object') {
+        const values = Object.values(dataObj);
+        if (values.length > 0) {
+          displayName = String(values[0] || '');
         }
-        return {
-          id: item.id,
-          name: displayName,
-          type: 'form',
-          icon: '/personalcard.svg',
-          data: dataObj,
-          project_id: item.project_id
-        };
-      });
+      }
       
-      setProjectNotes(formattedNotes);
-      setSelectedResources(formattedNotes.map(note => note.id));
-      
-    } catch (error) {
-      console.error('Ошибка при загрузке ресурсов проекта:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return {
+        id: item.id,
+        name: displayName,
+        type: 'form',
+        icon: '/personalcard.svg',
+        data: dataObj,
+        project_id: item.project_id,
+        pattern_id: item.pattern_id || 0
+      };
+    });
+    
+    console.log('Отформатированные заметки:', formattedNotes); // Для отладки
+    
+    setProjectNotes(formattedNotes);
+    setSelectedResources(formattedNotes.map(note => note.id));
+    
+  } catch (error) {
+    console.error('Ошибка при загрузке ресурсов проекта:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleBackClick = () => {
     navigate('/dashboard');
   };
 
-  const handleAddResourceClick = async () => {
+  const handleViewForm = (noteId) => {
+    setModalMode('view');
+    setSelectedNoteId(noteId);
+    setShowFormModal(true);
+  };
+
+  const handleViewTemplateNote = async (noteId) => {
     try {
-      setLoading(true);
-      const allNotes = await noteApi.getNotes();
-      const freeNotesData = allNotes.filter(note => 
-        !note.project_id
-      );
-      
-      const formattedFreeNotes = freeNotesData.map(item => {
-        let dataObj = item.data;
-        let displayName = 'Без названия';
-        
-        if (typeof dataObj === 'string') {
-          try {
-            dataObj = JSON.parse(dataObj);
-          } catch (e) {
-            dataObj = {};
-          }
-        }
-        
-        if (dataObj && typeof dataObj === 'object') {
-          const values = Object.values(dataObj);
-          if (values.length > 0) {
-            displayName = String(values[0] || '');
-          }
-        }
-        
-        return {
-          id: item.id,
-          name: displayName,
-          type: 'form',
-          icon: '/personalcard.svg',
-          selected: false,
-          data: dataObj,
-          project_id: item.project_id
-        };
-      });
-      
-      setFreeNotes(formattedFreeNotes);
-      setShowAddResourceModal(true);
-      
+      const note = await noteApi.getNoteById(noteId);
+      if (note.pattern_id !== 0) {
+        // Если это заметка по шаблону
+        const template = await patternApi.getById(note.pattern_id);
+        setSelectedTemplate(template);
+        setTemplateFormMode('view');
+        setSelectedNoteId(noteId);
+        setShowTemplateFormModal(true);
+      } else {
+        // Если стандартная анкета
+        handleViewForm(noteId);
+      }
     } catch (error) {
-      console.error('Ошибка при загрузке свободных заметок:', error);
-    } finally {
-      setLoading(false);
+      console.error('Ошибка при загрузке заметки:', error);
     }
   };
+
+  const handleEditForm = (noteId) => {
+    setModalMode('edit');
+    setSelectedNoteId(noteId);
+    setShowFormModal(true);
+  };
+
+  const handleEditTemplateNote = async (noteId) => {
+    try {
+      const note = await noteApi.getNoteById(noteId);
+      if (note.pattern_id !== 0) {
+        const template = await patternApi.getById(note.pattern_id);
+        setSelectedTemplate(template);
+        setTemplateFormMode('edit');
+        setSelectedNoteId(noteId);
+        setShowTemplateFormModal(true);
+      } else {
+        handleEditForm(noteId);
+      }
+    } catch (error) {
+      console.error('Ошибка при редактировании заметки:', error);
+    }
+  };
+
+  const handleFormSuccess = () => {
+    loadProjectResources();
+  };
+
+  const handleSwitchToEdit = (noteId) => {
+    setModalMode('edit');
+    setSelectedNoteId(noteId);
+  };
+
+  const handleSwitchToTemplateEdit = (noteId) => {
+    setTemplateFormMode('edit');
+  };
+
+  const handleAddResourceClick = async () => {
+  try {
+    setLoading(true);
+    const allNotes = await noteApi.getNotes();
+    const freeNotesData = allNotes.filter(note => !note.project_id);
+    
+    console.log('Свободные заметки (сырые):', freeNotesData); // Для отладки
+    
+    const formattedFreeNotes = freeNotesData.map(item => {
+      console.log('Свободная заметка ID:', item.id, 'pattern_id:', item.pattern_id); // Для отладки
+      
+      let dataObj = item.data;
+      let displayName = 'Без названия';
+      
+      if (typeof dataObj === 'string') {
+        try {
+          dataObj = JSON.parse(dataObj);
+        } catch (e) {
+          dataObj = {};
+        }
+      }
+      
+      if (dataObj && typeof dataObj === 'object') {
+        const values = Object.values(dataObj);
+        if (values.length > 0) {
+          displayName = String(values[0] || '');
+        }
+      }
+      
+      return {
+        id: item.id,
+        name: displayName,
+        type: 'form',
+        icon: '/personalcard.svg',
+        selected: false,
+        data: dataObj,
+        project_id: item.project_id,
+        pattern_id: item.pattern_id || 0 // Сохраняем pattern_id!
+      };
+    });
+    
+    console.log('Отформатированные свободные заметки:', formattedFreeNotes); // Для отладки
+    
+    setFreeNotes(formattedFreeNotes);
+    setShowAddResourceModal(true);
+    
+  } catch (error) {
+    console.error('Ошибка при загрузке свободных заметок:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleResourceSelect = (resourceId) => {
     setSelectedResources(prev => {
@@ -152,18 +242,23 @@ const ProjectPage = () => {
       const removedResources = projectNotes
         .filter(note => !selectedResources.includes(note.id))
         .map(note => note.id);
+      
+      // Добавляем новые ресурсы в проект
       for (const resourceId of newResources) {
         const note = freeNotes.find(n => n.id === resourceId);
         if (note) {
           await noteApi.update(resourceId, note.data, project.id);
         }
       }
+      
+      // Удаляем ресурсы из проекта
       for (const resourceId of removedResources) {
         const note = projectNotes.find(n => n.id === resourceId);
         if (note) {
           await noteApi.update(resourceId, note.data, null);
         }
       }
+      
       await loadProjectResources();
       setShowAddResourceModal(false);
       
@@ -181,13 +276,17 @@ const ProjectPage = () => {
     try {
       const note = projectNotes.find(n => n.id === resourceId);
       if (note) {
-        await noteApi.update(resourceId, note.data, null);
-        await loadProjectResources();
+        if (window.confirm('Вы уверены, что хотите удалить эту анкету?')) {
+          await noteApi.delete(resourceId);
+          await loadProjectResources();
+        }
       }
     } catch (error) {
-      console.error('Ошибка при удалении ресурса:', error);
+      console.error('Ошибка при удалении:', error);
+      alert('Не удалось удалить анкету');
     }
   };
+
   const handleUserDataChange = (field, value) => {
     setUserData(prev => ({
       ...prev,
@@ -195,16 +294,6 @@ const ProjectPage = () => {
     }));
   };
 
-  const handleSaveUserData = () => {
-    console.log('Сохранение данных:', userData);
-    setShowUserModal(false);
-  };
-
-  const handleDeleteAccount = () => {
-    if (window.confirm('Вы уверены, что хотите удалить аккаунт? Это действие нельзя отменить.')) {
-      logout();
-    }
-  };
   const userInitial = user?.username?.charAt(0)?.toUpperCase() || 'U';
 
   return (
@@ -256,7 +345,18 @@ const ProjectPage = () => {
         {/* Сетка добавленных ресурсов */}
         <div className="items-container">
           {projectNotes.map(resource => (
-            <div key={resource.id} className="item-with-name">
+            <div 
+              key={resource.id} 
+              className="item-with-name"
+              onClick={() => {
+                if (resource.pattern_id && resource.pattern_id !== 0) {
+                  handleViewTemplateNote(resource.id);
+                } else {
+                  handleViewForm(resource.id);
+                }
+              }}
+              style={{ cursor: 'pointer' }}
+            >
               <div className="item-card square-card">
                 <div className="card-icon">
                   <img src={resource.icon} alt={resource.type} className="item-type-icon" />
@@ -264,7 +364,10 @@ const ProjectPage = () => {
                 
                 <button 
                   className="delete-btn"
-                  onClick={() => handleRemoveResource(resource.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveResource(resource.id);
+                  }}
                 >
                   <img src="/delete.svg" alt="Удалить" className="delete-icon" />
                 </button>
@@ -324,8 +427,7 @@ const ProjectPage = () => {
                   </div>
                 </>
               )}
-              
-              {/* Секция заметок уже в проекте */}
+             
               {projectNotes.length > 0 && (
                 <>
                   <h4 className="resource-section-title">Заметки в проекте</h4>
@@ -371,98 +473,46 @@ const ProjectPage = () => {
         </div>
       )}
 
+      {/* Модальное окно стандартной анкеты */}
+      {showFormModal && (
+        <FormModal
+          showFormModal={showFormModal}
+          setShowFormModal={setShowFormModal}
+          mode={modalMode}
+          noteId={selectedNoteId}
+          onSuccess={handleFormSuccess}
+          onCancel={() => setShowFormModal(false)}
+          onSwitchToEdit={handleSwitchToEdit}
+        />
+      )}
+
+      {/* Модальное окно заметки по шаблону */}
+      {showTemplateFormModal && selectedTemplate && (
+        <TemplateFormModal
+          showFormModal={showTemplateFormModal}
+          setShowFormModal={setShowTemplateFormModal}
+          template={selectedTemplate}
+          mode={templateFormMode}
+          noteId={selectedNoteId}
+          onSuccess={handleFormSuccess}
+          onCancel={() => {
+            setShowTemplateFormModal(false);
+            setSelectedTemplate(null);
+            setSelectedNoteId(null);
+          }}
+          onSwitchToEdit={handleSwitchToTemplateEdit}
+        />
+      )}
+
       {/* Модальное окно пользователя */}
       {showUserModal && (
-        <div className="modal-overlay" onClick={() => setShowUserModal(false)}>
-          <div className="user-modal-wide" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <button 
-                className="modal-close"
-                onClick={() => setShowUserModal(false)}
-              >
-                ×
-              </button>
-            </div>
-            
-            <div className="user-profile">
-              <div className="user-avatar-large">
-                {userInitial}
-              </div>
-              
-              <div className="user-form">
-                <div className="form-row">
-                  <label className="form-label">Никнейм</label>
-                  <input
-                    type="text"
-                    className="form-input-wide"
-                    value={userData.nickname}
-                    onChange={(e) => handleUserDataChange('nickname', e.target.value)}
-                    placeholder="Введите никнейм"
-                  />
-                </div>
-                
-                <div className="form-row">
-                  <label className="form-label">Почта</label>
-                  <input
-                    type="email"
-                    className="form-input-wide"
-                    value={userData.email}
-                    onChange={(e) => handleUserDataChange('email', e.target.value)}
-                    placeholder="Введите email"
-                  />
-                </div>
-                
-                <div className="form-row">
-                  <label className="form-label">Телефон</label>
-                  <input
-                    type="tel"
-                    className="form-input-wide"
-                    value={userData.phone}
-                    onChange={(e) => handleUserDataChange('phone', e.target.value)}
-                    placeholder="Введите телефон"
-                  />
-                </div>
-                
-                <div className="form-row">
-                  <label className="form-label">Пароль</label>
-                  <input
-                    type="password"
-                    className="form-input-wide"
-                    value={userData.password}
-                    onChange={(e) => handleUserDataChange('password', e.target.value)}
-                    placeholder="Введите новый пароль"
-                  />
-                </div>
-                
-                <div className="form-row">
-                  <label className="form-label">Повторите пароль</label>
-                  <input
-                    type="password"
-                    className="form-input-wide"
-                    value={userData.confirmPassword}
-                    onChange={(e) => handleUserDataChange('confirmPassword', e.target.value)}
-                    placeholder="Повторите пароль"
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <div className="modal-actions-double-wide">
-              <button 
-                className="btn btn-primary"
-                onClick={handleDeleteAccount}
-              >
-                УДАЛИТЬ АККАУНТ
-              </button>
-              <button 
-                className="btn btn-primary"
-                onClick={handleSaveUserData}
-              >
-                СОХРАНИТЬ ИЗМЕНЕНИЯ
-              </button>
-            </div>
-          </div>
-        </div>
+        <UserModal
+          showUserModal={showUserModal}
+          setShowUserModal={setShowUserModal}
+          userInitial={userInitial}
+          userData={userData}
+          handleUserDataChange={handleUserDataChange}
+        />
       )}
     </div>
   );
