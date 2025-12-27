@@ -14,10 +14,8 @@ class UsersService:
             return user_id
     def auth_user(self, user_login_rq: LoginUser):
         user_data = UserRepository(self.db).login_user(user_login_rq)
-        token = create_access_token(id=user_data.id, nickname=user_data.nickname)
-        return token
-    def auth_user(self, user: LoginUser):
-        user_from_db = UserRepository(self.db).login_user(user)
-        return user_from_db
+        return user_data
     def get_all_users(self):
          return UserRepository(self.db).get_all_users()
+    def get_user(self, user_id):
+        return UserRepository(self.db).get_user(user_id)
